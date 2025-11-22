@@ -46,7 +46,7 @@ export default function Button({
       disabled={isDisabled}
       activeOpacity={0.7}
     >
-      {Boolean(loading) ? (
+      {loading ? (
         <ActivityIndicator
           color={variant === 'primary' ? Colors.white : Colors.primary}
         />

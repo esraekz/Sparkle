@@ -103,7 +103,7 @@ export default function LoginScreen() {
               value={formData.password}
               onChangeText={(text) => setFormData({ ...formData, password: text })}
               error={errors.password}
-              secureTextEntry={Boolean(true)}
+              secureTextEntry={true}
               autoComplete="password"
               textContentType="password"
             />

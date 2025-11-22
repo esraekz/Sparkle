@@ -26,7 +26,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(Boolean(true));
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check authentication status on app launch
   useEffect(() => {
@@ -123,8 +123,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value: AuthContextType = {
     user,
-    isLoading: Boolean(isLoading),
-    isAuthenticated: Boolean(user),
+    isLoading,
+    isAuthenticated: !!user,
     login,
     signup,
     logout,

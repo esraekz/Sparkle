@@ -117,7 +117,7 @@ export default function SignupScreen() {
               value={formData.password}
               onChangeText={(text) => setFormData({ ...formData, password: text })}
               error={errors.password}
-              secureTextEntry={Boolean(true)}
+              secureTextEntry={true}
               autoComplete="password-new"
               textContentType="newPassword"
             />
@@ -130,7 +130,7 @@ export default function SignupScreen() {
                 setFormData({ ...formData, confirmPassword: text })
               }
               error={errors.confirmPassword}
-              secureTextEntry={Boolean(true)}
+              secureTextEntry={true}
               autoComplete="password-new"
               textContentType="newPassword"
             />

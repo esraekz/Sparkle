@@ -26,7 +26,9 @@ export default function TextInput({
   const [isFocused, setIsFocused] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const showPassword = Boolean(secureTextEntry && !isPasswordVisible);
+  // Coerce to boolean to handle any string values
+  const wantsSecure = !!secureTextEntry;
+  const showPassword = wantsSecure && !isPasswordVisible;
 
   return (
     <View style={styles.container}>
@@ -39,16 +41,16 @@ export default function TextInput({
         ]}
       >
         <RNTextInput
+          {...props}
           style={styles.input}
           placeholderTextColor={Colors.gray500}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           secureTextEntry={showPassword}
           autoCapitalize="none"
-          autoCorrect={Boolean(false)}
-          {...props}
+          autoCorrect={false}
         />
-        {Boolean(secureTextEntry) && (
+        {wantsSecure && (
           <TouchableOpacity
             onPress={() => setIsPasswordVisible(!isPasswordVisible)}
             style={styles.eyeButton}

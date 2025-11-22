@@ -55,8 +55,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [postingFrequency, setPostingFrequency] = useState<number>(3); // Default: 3x/week
   const [preferredDays, setPreferredDays] = useState<string[]>(['monday', 'wednesday', 'friday']);
   const [preferredTime, setPreferredTime] = useState<number>(14); // Default: 2 PM
-  const [askBeforePublish, setAskBeforePublish] = useState<boolean>(Boolean(true));
-  const [isLoading, setIsLoading] = useState(Boolean(false));
+  const [askBeforePublish, setAskBeforePublish] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   /**
    * Check if user has completed onboarding
@@ -149,7 +149,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     postingFrequency,
     preferredDays,
     preferredTime,
-    askBeforePublish: Boolean(askBeforePublish),
+    askBeforePublish,
     setTopics,
     setMainGoal,
     setTone,
@@ -159,7 +159,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     setPreferredTime,
     setAskBeforePublish,
     submitBlueprint,
-    isLoading: Boolean(isLoading),
+    isLoading,
     hasCompletedOnboarding,
     markOnboardingComplete,
   };
