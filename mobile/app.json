@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Sparkle",
+    "slug": "sparkle",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "primaryColor": "#F5C842",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5C842"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sparkle.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5C842"
+      },
+      "package": "com.sparkle.app",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiUrl": "http://localhost:8000/api/v1"
+    }
+  }
+}

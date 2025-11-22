@@ -1,10 +1,19 @@
 from fastapi import HTTPException, status
 from database import supabase
 from models.brand_blueprint import BrandBlueprintCreate, BrandBlueprintUpdate
+from config.settings import settings
 from typing import Dict, Any
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+# ==============================================================================
+# MOCK DATA STORAGE (Phase 1 MVP)
+# ==============================================================================
+# In-memory storage for brand blueprints during Phase 1
+# This will be replaced with actual database operations in Phase 2
+MOCK_BLUEPRINTS: Dict[str, Dict[str, Any]] = {}
 
 
 async def create_brand_blueprint(user_id: str, data: BrandBlueprintCreate) -> Dict[str, Any]:
@@ -22,6 +31,35 @@ async def create_brand_blueprint(user_id: str, data: BrandBlueprintCreate) -> Di
         HTTPException 409: If blueprint already exists for user
         HTTPException 500: If database error occurs
     """
+    # ==============================================================================
+    # PHASE 1: Mock Mode (No database)
+    # ==============================================================================
+    if settings.USE_MOCK_AUTH:
+        # Check if blueprint already exists in mock storage
+        if user_id in MOCK_BLUEPRINTS:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Brand blueprint already exists for this user. Use PUT to update."
+            )
+
+        # Create mock blueprint
+        blueprint_dict = data.model_dump()
+        mock_blueprint = {
+            "id": "blueprint_123",
+            "user_id": user_id,
+            **blueprint_dict,
+            "created_at": datetime.utcnow().isoformat() + "Z",
+            "updated_at": datetime.utcnow().isoformat() + "Z",
+        }
+
+        # Store in mock storage
+        MOCK_BLUEPRINTS[user_id] = mock_blueprint
+        logger.info(f"✅ Created mock brand blueprint for user {user_id}")
+        return mock_blueprint
+
+    # ==============================================================================
+    # PHASE 2: Real Database (Currently disabled)
+    # ==============================================================================
     try:
         # Check if blueprint already exists
         existing = supabase.table("sparkle_brand_blueprints").select("id").eq("user_id", user_id).execute()
@@ -76,6 +114,20 @@ async def get_brand_blueprint(user_id: str) -> Dict[str, Any]:
         HTTPException 404: If blueprint not found
         HTTPException 500: If database error occurs
     """
+    # ==============================================================================
+    # PHASE 1: Mock Mode (No database)
+    # ==============================================================================
+    if settings.USE_MOCK_AUTH:
+        if user_id not in MOCK_BLUEPRINTS:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Brand blueprint not found. Please complete onboarding first."
+            )
+        return MOCK_BLUEPRINTS[user_id]
+
+    # ==============================================================================
+    # PHASE 2: Real Database (Currently disabled)
+    # ==============================================================================
     try:
         result = supabase.table("sparkle_brand_blueprints").select("*").eq("user_id", user_id).execute()
 
@@ -112,6 +164,37 @@ async def update_brand_blueprint(user_id: str, data: BrandBlueprintUpdate) -> Di
         HTTPException 404: If blueprint not found
         HTTPException 500: If database error occurs
     """
+    # ==============================================================================
+    # PHASE 1: Mock Mode (No database)
+    # ==============================================================================
+    if settings.USE_MOCK_AUTH:
+        if user_id not in MOCK_BLUEPRINTS:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Brand blueprint not found. Create one first with POST."
+            )
+
+        # Get existing blueprint
+        existing_blueprint = MOCK_BLUEPRINTS[user_id]
+
+        # Only include fields that are provided
+        update_data = data.model_dump(exclude_unset=True)
+
+        # Update fields
+        updated_blueprint = {
+            **existing_blueprint,
+            **update_data,
+            "updated_at": datetime.utcnow().isoformat() + "Z",
+        }
+
+        # Store updated blueprint
+        MOCK_BLUEPRINTS[user_id] = updated_blueprint
+        logger.info(f"✅ Updated mock brand blueprint for user {user_id}")
+        return updated_blueprint
+
+    # ==============================================================================
+    # PHASE 2: Real Database (Currently disabled)
+    # ==============================================================================
     try:
         # Check if blueprint exists
         existing = supabase.table("sparkle_brand_blueprints").select("id").eq("user_id", user_id).execute()

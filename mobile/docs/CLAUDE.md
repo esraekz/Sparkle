@@ -73,7 +73,7 @@ Sparkle is an AI personal-branding copilot for LinkedIn. Mobile-first React Nati
 ## When In Doubt
 
 Ask clarifying questions before generating code. Better to ask than assume.
-End of each implementation or development activity, give a short summary of what you have done.
+
 
 Before generating any code, Claude should be familiar with:
 - **[PRD.md](./PRD.md)** - Product features, user experience, and core functionality
