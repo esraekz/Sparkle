@@ -30,7 +30,7 @@ export default function Button({
   style,
   textStyle,
 }: ButtonProps) {
-  const isDisabled = Boolean(disabled || loading);
+  const isDisabled = disabled || loading;
 
   return (
     <TouchableOpacity

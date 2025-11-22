@@ -15,7 +15,7 @@ export default function AuthStack() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerShown: Boolean(false),
+        headerShown: false,
         contentStyle: {
           backgroundColor: Colors.background,
         },

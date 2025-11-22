@@ -41,9 +41,9 @@ function AppNavigator() {
   const { hasCompletedOnboarding } = useOnboarding();
   const [onboardingComplete, setOnboardingComplete] = React.useState<boolean | null>(null);
 
-  // Ensure values are proper booleans
-  const isAuthenticated = Boolean(authContext.isAuthenticated);
-  const authLoading = Boolean(authContext.isLoading);
+  // Get values directly - they're already booleans from AuthContext
+  const isAuthenticated = authContext.isAuthenticated;
+  const authLoading = authContext.isLoading;
 
   // Check onboarding status when user is authenticated
   React.useEffect(() => {

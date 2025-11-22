@@ -21,7 +21,7 @@ export default function OnboardingStack() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerShown: Boolean(false),
+        headerShown: false,
         animation: 'slide_from_right',
       }}
     >

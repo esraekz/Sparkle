@@ -13,8 +13,8 @@ const queryClient = new QueryClient({
       retry: 2, // Retry failed requests twice
       staleTime: 5 * 60 * 1000, // Data is fresh for 5 minutes
       gcTime: 10 * 60 * 1000, // Cache garbage collection after 10 minutes (formerly cacheTime)
-      refetchOnWindowFocus: Boolean(false), // Don't refetch when app comes back to foreground
-      refetchOnReconnect: Boolean(true), // Refetch when internet reconnects
+      refetchOnWindowFocus: false, // Don't refetch when app comes back to foreground
+      refetchOnReconnect: true, // Refetch when internet reconnects
     },
     mutations: {
       retry: 1, // Retry failed mutations once
