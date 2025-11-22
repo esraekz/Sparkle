@@ -1,0 +1,24 @@
+# Core Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Configuration
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Database
+supabase>=2.3.0
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.6
+
+# HTTP Client (for news APIs, LLM providers)
+httpx>=0.25.0
+
+# Optional: Rate Limiting (Phase 2)
+# slowapi>=0.1.9
+
+# Optional: Job Scheduling (Phase 2)
+# APScheduler>=3.10.4
