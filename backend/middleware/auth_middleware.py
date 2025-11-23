@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from services.auth_service import get_user_from_token, get_mock_user
+from services.auth_service import get_user_from_token, get_mock_user_from_token
 from config.settings import settings
 from typing import Dict, Any, Optional
 
@@ -37,9 +37,17 @@ async def get_current_user(
     # TODO Phase 2: Remove this block and uncomment real auth below
     # ==============================================================================
     if settings.USE_MOCK_AUTH:
-        # Return mock user for Phase 1 development
-        # No token verification required
-        return get_mock_user()
+        # Verify token is provided
+        if not credentials:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Missing authentication token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Decode mock JWT token and extract user info
+        token = credentials.credentials
+        return get_mock_user_from_token(token)
 
     # ==============================================================================
     # PHASE 2: Real Authentication (Currently Disabled)

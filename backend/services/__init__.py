@@ -1,4 +1,4 @@
-from .auth_service import verify_jwt_token, get_user_from_token, get_mock_user
+from .auth_service import verify_jwt_token, get_user_from_token, get_mock_user_from_token
 from .onboarding_service import (
     create_brand_blueprint,
     get_brand_blueprint,
@@ -17,7 +17,7 @@ from .post_service import (
 __all__ = [
     "verify_jwt_token",
     "get_user_from_token",
-    "get_mock_user",
+    "get_mock_user_from_token",
     "create_brand_blueprint",
     "get_brand_blueprint",
     "update_brand_blueprint",

@@ -24,14 +24,14 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 function AppNavigator() {
   const authContext = useAuth();
-  const { hasCompletedOnboarding, onboardingCompletedTrigger } = useOnboarding();
+  const { hasCompletedOnboarding } = useOnboarding();
   const [onboardingComplete, setOnboardingComplete] = React.useState<boolean | null>(null);
 
   // Get values directly - they're already booleans from AuthContext
   const isAuthenticated = authContext.isAuthenticated;
   const authLoading = authContext.isLoading;
 
-  // Check onboarding status when user is authenticated OR when onboarding completes
+  // Check onboarding status when user is authenticated
   React.useEffect(() => {
     const checkOnboarding = async () => {
       console.log('[App] isAuthenticated:', isAuthenticated);
@@ -47,7 +47,7 @@ function AppNavigator() {
     };
 
     checkOnboarding();
-  }, [isAuthenticated, onboardingCompletedTrigger]);
+  }, [isAuthenticated]);
 
   // Show loading spinner while checking authentication or onboarding
   if (authLoading || (isAuthenticated && onboardingComplete === null)) {

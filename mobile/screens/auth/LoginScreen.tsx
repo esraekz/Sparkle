@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../contexts/AuthContext';
 import { loginSchema, type LoginFormData } from '../../utils/validation';
 import Button from '../../components/Button';
@@ -64,6 +65,31 @@ export default function LoginScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleClearData = async () => {
+    Alert.alert(
+      'Clear App Data',
+      'This will clear all stored data including auth tokens and onboarding progress. Use this to test with a fresh state.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              Alert.alert('Success', 'App data cleared. Please reload the app.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to clear data');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -127,6 +153,9 @@ export default function LoginScreen() {
             <Text style={styles.footerText}>
               Phase 1: Using mock authentication
             </Text>
+            <TouchableOpacity onPress={handleClearData} style={styles.clearDataButton}>
+              <Text style={styles.clearDataText}>Clear App Data (Dev)</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -196,5 +225,15 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: Typography.fontSize.xs,
     color: Colors.textTertiary,
+  },
+  clearDataButton: {
+    marginTop: Layout.spacing.md,
+    paddingVertical: Layout.spacing.sm,
+    paddingHorizontal: Layout.spacing.md,
+  },
+  clearDataText: {
+    fontSize: Typography.fontSize.xs,
+    color: '#FF6B6B',
+    fontWeight: Typography.fontWeight.semibold,
   },
 });

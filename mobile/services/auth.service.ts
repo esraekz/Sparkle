@@ -4,7 +4,10 @@
  */
 
 import apiClient, { tokenService } from './api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { User, LoginCredentials, SignupData, AuthTokens, ApiResponse } from '../types';
+
+const ONBOARDING_COMPLETE_KEY = '@sparkle_onboarding_complete';
 
 export const authService = {
   /**
@@ -18,6 +21,9 @@ export const authService = {
     if (response.data.data.access_token) {
       await tokenService.setToken(response.data.data.access_token);
     }
+
+    // Clear onboarding flag from previous user (if any)
+    await AsyncStorage.removeItem(ONBOARDING_COMPLETE_KEY);
 
     return response.data.data;
   },
@@ -34,6 +40,9 @@ export const authService = {
       await tokenService.setToken(response.data.data.access_token);
     }
 
+    // Clear onboarding flag from previous user (if any)
+    await AsyncStorage.removeItem(ONBOARDING_COMPLETE_KEY);
+
     return response.data.data;
   },
 
@@ -48,10 +57,12 @@ export const authService = {
 
   /**
    * Logout user
-   * Clears token from storage
+   * Clears token and onboarding flag from storage
    */
   async logout(): Promise<void> {
     await tokenService.removeToken();
+    // Clear onboarding flag so next user goes through onboarding
+    await AsyncStorage.removeItem(ONBOARDING_COMPLETE_KEY);
   },
 
   /**

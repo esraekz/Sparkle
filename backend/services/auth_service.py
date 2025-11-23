@@ -10,30 +10,40 @@ from typing import Dict, Any
 # TODO Phase 2: Remove mock auth and use real Supabase JWT verification
 # ==============================================================================
 
-MOCK_USER_ID = "123e4567-e89b-12d3-a456-426614174000"
-MOCK_USER_EMAIL = "test@sparkle.com"
-MOCK_USER_NAME = "Test User"
+# Mock JWT secret (must match routers/auth.py)
+MOCK_JWT_SECRET = "mock_jwt_secret_phase1_development_do_not_use_in_production"
 
 
-def get_mock_user() -> Dict[str, Any]:
+def get_mock_user_from_token(token: str) -> Dict[str, Any]:
     """
-    Return mock user for Phase 1 MVP development.
+    Decode mock JWT token and extract user information for Phase 1 MVP.
 
-    This allows backend development without real authentication.
-    The mock user ID matches the user inserted in the database seed.
+    Args:
+        token: Mock JWT token string
 
     Returns:
-        Mock user information
+        User information from token payload
 
     Note:
         This function will be removed in Phase 2 when real auth is implemented.
     """
-    return {
-        "id": MOCK_USER_ID,
-        "email": MOCK_USER_EMAIL,
-        "full_name": MOCK_USER_NAME,
-        "role": "authenticated",
-    }
+    try:
+        # Decode the mock JWT token
+        payload = jwt.decode(token, MOCK_JWT_SECRET, algorithms=["HS256"])
+
+        return {
+            "id": payload.get("sub"),
+            "email": payload.get("email"),
+            "full_name": payload.get("full_name"),
+            "role": payload.get("role", "authenticated"),
+        }
+    except JWTError as e:
+        # If token is invalid, raise HTTP exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid mock token: {str(e)}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 # ==============================================================================

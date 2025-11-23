@@ -1,6 +1,6 @@
 /**
- * Onboarding Step 3: Your Goal
- * User selects their main goal on LinkedIn
+ * Onboarding Step 5: Voice & Tone
+ * User selects the tone that represents their voice
  */
 
 import React, { useState } from 'react';
@@ -27,33 +27,58 @@ type OnboardingStackParamList = {
 };
 
 type Props = {
-  navigation: NativeStackNavigationProp<OnboardingStackParamList, 'Onboarding3'>;
+  navigation: NativeStackNavigationProp<OnboardingStackParamList, 'Onboarding5'>;
 };
 
-// Goal options (matching mockup)
-const GOALS = [
-  { id: 'build_thought_leadership', label: 'Build thought leadership' },
-  { id: 'grow_audience', label: 'Grow my audience' },
-  { id: 'attract_opportunities', label: 'Attract new career opportunities' },
-  { id: 'strengthen_brand', label: 'Strengthen my professional brand' },
-  { id: 'become_top_voice', label: 'Become a Top Voice' },
+// Tone options with emojis and descriptions (matching mockup)
+const TONES = [
+  {
+    id: 'warm_authentic',
+    emoji: '💛',
+    label: 'Warm & Authentic',
+    description: 'Friendly, relatable, human-centered',
+  },
+  {
+    id: 'professional_thoughtful',
+    emoji: '💬',
+    label: 'Professional & Thoughtful',
+    description: 'Polished, measured, business-focused',
+  },
+  {
+    id: 'bold_innovative',
+    emoji: '⚡',
+    label: 'Bold & Innovative',
+    description: 'Daring, forward-thinking, trendsetter',
+  },
+  {
+    id: 'analytical_insightful',
+    emoji: '💡',
+    label: 'Analytical & Insightful',
+    description: 'Data-driven, deep-thinking, educational',
+  },
+  {
+    id: 'assertive_confident',
+    emoji: '🎯',
+    label: 'Assertive & Confident',
+    description: 'Direct, decisive, leadership-focused',
+  },
 ];
 
-export default function Onboarding3Screen({ navigation }: Props) {
-  const { mainGoal, setMainGoal } = useOnboarding();
-  const [selectedGoal, setSelectedGoal] = useState(mainGoal);
+export default function Onboarding5Screen({ navigation }: Props) {
+  const { tone, setTone } = useOnboarding();
+  const [selectedTone, setSelectedTone] = useState(tone);
 
   const handleContinue = () => {
-    if (!selectedGoal) {
-      Alert.alert('Select Goal', 'Please select your main goal to continue.');
+    if (!selectedTone) {
+      Alert.alert('Select Tone', 'Please select a tone to continue.');
       return;
     }
 
     // Save to context
-    setMainGoal(selectedGoal);
+    setTone(selectedTone);
 
     // Navigate to next screen
-    navigation.navigate('Onboarding4');
+    navigation.navigate('Onboarding6');
   };
 
   return (
@@ -73,37 +98,38 @@ export default function Onboarding3Screen({ navigation }: Props) {
       <View style={styles.progressContainer}>
         <View style={styles.dot} />
         <View style={styles.dot} />
+        <View style={styles.dot} />
+        <View style={styles.dot} />
         <View style={[styles.dot, styles.dotActive]} />
-        <View style={styles.dot} />
-        <View style={styles.dot} />
         <View style={styles.dot} />
       </View>
 
       {/* ScrollView with all content */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         style={styles.scrollView}
       >
         {/* Title */}
-        <Text style={styles.title}>What's your main goal on LinkedIn?</Text>
-        <Text style={styles.subtitle}>Choose what matters most to you</Text>
+        <Text style={styles.title}>What tone sounds most like you?</Text>
+        <Text style={styles.subtitle}>Pick the tone that represents your voice</Text>
 
-        {/* Goal options */}
-        <View style={styles.goalsContainer}>
-          {GOALS.map((goal) => (
+        {/* Tone options */}
+        <View style={styles.tonesContainer}>
+          {TONES.map((toneOption) => (
             <TouchableOpacity
-              key={goal.id}
-              style={[styles.goalOption, selectedGoal === goal.id && styles.goalOptionSelected]}
-              onPress={() => setSelectedGoal(goal.id)}
+              key={toneOption.id}
+              style={[styles.toneCard, selectedTone === toneOption.id && styles.toneCardSelected]}
+              onPress={() => setSelectedTone(toneOption.id)}
               activeOpacity={0.7}
             >
-              <View style={[styles.radioCircle, selectedGoal === goal.id && styles.radioCircleSelected]}>
-                {selectedGoal === goal.id && <View style={styles.radioInner} />}
+              <View style={styles.toneHeader}>
+                <Text style={styles.toneEmoji}>{toneOption.emoji}</Text>
+                <Text style={[styles.toneLabel, selectedTone === toneOption.id && styles.toneLabelSelected]}>
+                  {toneOption.label}
+                </Text>
               </View>
-              <Text style={[styles.goalText, selectedGoal === goal.id && styles.goalTextSelected]}>
-                {goal.label}
-              </Text>
+              <Text style={styles.toneDescription}>{toneOption.description}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -113,7 +139,7 @@ export default function Onboarding3Screen({ navigation }: Props) {
           <Button
             title="Continue"
             onPress={handleContinue}
-            disabled={!selectedGoal}
+            disabled={!selectedTone}
           />
         </View>
       </ScrollView>
@@ -162,71 +188,62 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 16,
     paddingBottom: 120,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: '#1A1A1A',
-    marginBottom: 12,
+    marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666666',
-    marginBottom: 40,
-    lineHeight: 22,
+    marginBottom: 20,
+    lineHeight: 20,
     textAlign: 'center',
   },
-  goalsContainer: {
-    marginBottom: 32,
+  tonesContainer: {
+    marginBottom: 20,
   },
-  goalOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+  toneCard: {
+    padding: 16,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: '#E5E5E5',
     backgroundColor: '#FFFFFF',
-    marginBottom: 12,
-    minHeight: 64,
-    gap: 16,
+    marginBottom: 10,
+    minHeight: 72,
   },
-  goalOptionSelected: {
+  toneCardSelected: {
     borderColor: '#F5C842',
     backgroundColor: '#FFF9E6',
   },
-  radioCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#D1D1D1',
+  toneHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 6,
+    gap: 8,
   },
-  radioCircleSelected: {
-    borderColor: '#F5C842',
+  toneEmoji: {
+    fontSize: 18,
   },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#F5C842',
-  },
-  goalText: {
+  toneLabel: {
     fontSize: 16,
-    color: '#1A1A1A',
-    fontWeight: '500',
-    flex: 1,
-  },
-  goalTextSelected: {
     fontWeight: '600',
+    color: '#1A1A1A',
+  },
+  toneLabelSelected: {
+    fontWeight: '700',
+  },
+  toneDescription: {
+    fontSize: 13,
+    color: '#666666',
+    lineHeight: 18,
   },
   buttonContainer: {
-    marginTop: 16,
+    marginTop: 8,
   },
 });

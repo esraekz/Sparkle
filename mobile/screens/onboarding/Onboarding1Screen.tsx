@@ -1,10 +1,11 @@
 /**
- * Onboarding Screen 1: Welcome
- * Introduction to Sparkle and brand blueprint concept
+ * Onboarding Step 1: Welcome Screen
+ * Introduction to Sparkle and start of brand blueprint setup
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Button from '../../components/Button';
 
@@ -12,6 +13,9 @@ type OnboardingStackParamList = {
   Onboarding1: undefined;
   Onboarding2: undefined;
   Onboarding3: undefined;
+  Onboarding4: undefined;
+  Onboarding5: undefined;
+  Onboarding6: undefined;
 };
 
 type Props = {
@@ -19,50 +23,48 @@ type Props = {
 };
 
 export default function Onboarding1Screen({ navigation }: Props) {
-  const handleGetStarted = () => {
+  const handleStart = () => {
     navigation.navigate('Onboarding2');
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Progress Dots */}
+      <View style={styles.progressContainer}>
+        <View style={[styles.dot, styles.dotActive]} />
+        <View style={styles.dot} />
+        <View style={styles.dot} />
+        <View style={styles.dot} />
+        <View style={styles.dot} />
+        <View style={styles.dot} />
+      </View>
+
+      {/* Content */}
       <View style={styles.content}>
-        {/* Logo/Icon */}
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoEmoji}>✨</Text>
+        {/* Sparkle Icon */}
+        <View style={styles.iconContainer}>
+          <Text style={styles.sparkleIcon}>✨</Text>
         </View>
 
-        {/* Title */}
-        <Text style={styles.title}>Hi, I'm Sparkle</Text>
-        <Text style={styles.subtitle}>Your personal branding copilot</Text>
+        {/* App Name */}
+        <Text style={styles.appName}>Sparkle</Text>
 
-        {/* Description */}
-        <Text style={styles.description}>
-          Let's build your brand blueprint together so every post sounds uniquely you.
+        {/* Welcome Message */}
+        <Text style={styles.welcomeTitle}>
+          Hi, I'm Sparkle — your personal branding copilot
         </Text>
 
-        {/* Feature highlights */}
-        <View style={styles.features}>
-          <FeatureItem emoji="🎯" text="AI that matches your voice" />
-          <FeatureItem emoji="📰" text="Posts from trending news" />
-          <FeatureItem emoji="⏰" text="Smart scheduling" />
-          <FeatureItem emoji="📊" text="Analytics & insights" />
-        </View>
+        {/* Subtitle */}
+        <Text style={styles.welcomeSubtitle}>
+          Let's build your brand blueprint together so every post sounds uniquely you.
+        </Text>
       </View>
 
-      {/* Bottom button */}
+      {/* Bottom Button */}
       <View style={styles.buttonContainer}>
-        <Button title="Get Started" onPress={handleGetStarted} />
+        <Button title="Let's Start" onPress={handleStart} />
       </View>
     </SafeAreaView>
-  );
-}
-
-function FeatureItem({ emoji, text }: { emoji: string; text: string }) {
-  return (
-    <View style={styles.featureItem}>
-      <Text style={styles.featureEmoji}>{emoji}</Text>
-      <Text style={styles.featureText}>{text}</Text>
-    </View>
   );
 }
 
@@ -71,63 +73,59 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+  progressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+    gap: 8,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#E5E5E5',
+  },
+  dotActive: {
+    backgroundColor: '#F5C842',
+    width: 24,
+  },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    alignItems: 'center',
-  },
-  logoContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#F5C842',
-    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 32,
+    alignItems: 'center',
+    paddingHorizontal: 32,
   },
-  logoEmoji: {
-    fontSize: 50,
+  iconContainer: {
+    marginBottom: 24,
   },
-  title: {
-    fontSize: 32,
+  sparkleIcon: {
+    fontSize: 80,
+  },
+  appName: {
+    fontSize: 36,
     fontWeight: '700',
     color: '#1A1A1A',
-    marginBottom: 8,
+    marginBottom: 32,
     textAlign: 'center',
   },
-  subtitle: {
-    fontSize: 18,
-    color: '#666666',
-    marginBottom: 24,
+  welcomeTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1A1A1A',
     textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 28,
   },
-  description: {
+  welcomeSubtitle: {
     fontSize: 16,
-    color: '#4A4A4A',
+    color: '#666666',
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 48,
-  },
-  features: {
-    width: '100%',
-    gap: 20,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  featureEmoji: {
-    fontSize: 28,
-  },
-  featureText: {
-    fontSize: 16,
-    color: '#1A1A1A',
-    fontWeight: '500',
+    paddingHorizontal: 16,
   },
   buttonContainer: {
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
 });

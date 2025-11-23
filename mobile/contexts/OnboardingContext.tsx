@@ -18,7 +18,7 @@ interface OnboardingContextType {
   inspirations: string;
   postingFrequency: number;
   preferredDays: string[];
-  preferredTime: number;
+  preferredTime: string;
   askBeforePublish: boolean;
 
   // Update methods
@@ -28,7 +28,7 @@ interface OnboardingContextType {
   setInspirations: (inspirations: string) => void;
   setPostingFrequency: (frequency: number) => void;
   setPreferredDays: (days: string[]) => void;
-  setPreferredTime: (time: number) => void;
+  setPreferredTime: (time: string) => void;
   setAskBeforePublish: (value: boolean) => void;
 
   // Submit
@@ -38,6 +38,7 @@ interface OnboardingContextType {
   // Onboarding status
   hasCompletedOnboarding: () => Promise<boolean>;
   markOnboardingComplete: () => Promise<void>;
+  onboardingCompletedTrigger: number; // Increments when onboarding completes
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -54,9 +55,10 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [inspirations, setInspirations] = useState<string>('');
   const [postingFrequency, setPostingFrequency] = useState<number>(3); // Default: 3x/week
   const [preferredDays, setPreferredDays] = useState<string[]>(['monday', 'wednesday', 'friday']);
-  const [preferredTime, setPreferredTime] = useState<number>(14); // Default: 2 PM
+  const [preferredTime, setPreferredTime] = useState<string>('14'); // Default: 2 PM (as string for TextInput)
   const [askBeforePublish, setAskBeforePublish] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [onboardingCompletedTrigger, setOnboardingCompletedTrigger] = useState(0);
 
   /**
    * Check if user has completed onboarding
@@ -80,10 +82,21 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       console.log('[OnboardingContext] Blueprint found:', blueprint);
 
       if (blueprint) {
-        // Blueprint exists, mark as complete
-        await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
-        console.log('[OnboardingContext] Onboarding complete (from backend)');
-        return true;
+        // Validate blueprint is actually complete (has required fields)
+        const isComplete =
+          blueprint.topics && blueprint.topics.length > 0 &&
+          blueprint.main_goal && blueprint.main_goal.trim() !== '' &&
+          blueprint.tone && blueprint.tone.trim() !== '';
+
+        if (isComplete) {
+          // Blueprint exists and is complete, mark as complete
+          await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+          console.log('[OnboardingContext] Onboarding complete (from backend)');
+          return true;
+        } else {
+          console.log('[OnboardingContext] Blueprint exists but is incomplete, onboarding not complete');
+          return false;
+        }
       }
 
       console.log('[OnboardingContext] No blueprint found, onboarding not complete');
@@ -100,6 +113,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
    */
   const markOnboardingComplete = async (): Promise<void> => {
     await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
+    // Increment trigger to notify App.tsx to re-check onboarding status
+    setOnboardingCompletedTrigger(prev => prev + 1);
   };
 
   /**
@@ -112,7 +127,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       // Map UI state to API format
       const postingPreferences: PostingPreferences = {
         preferred_days: preferredDays,
-        preferred_hours: [preferredTime],
+        preferred_hours: [parseInt(preferredTime)], // Convert string to number
         posts_per_week: postingFrequency,
         ask_before_publish: askBeforePublish,
       };
@@ -131,7 +146,26 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         posting_preferences: postingPreferences,
       };
 
-      await onboardingService.createBrandBlueprint(blueprintData);
+      // Check if blueprint already exists
+      try {
+        const existing = await onboardingService.getBrandBlueprint();
+        if (existing) {
+          // Blueprint exists, update it
+          await onboardingService.updateBrandBlueprint(blueprintData);
+        } else {
+          // No blueprint, create new one
+          await onboardingService.createBrandBlueprint(blueprintData);
+        }
+      } catch (error: any) {
+        // If 404, blueprint doesn't exist, create it
+        if (error.response?.status === 404) {
+          await onboardingService.createBrandBlueprint(blueprintData);
+        } else {
+          // Some other error, rethrow
+          throw error;
+        }
+      }
+
       await markOnboardingComplete();
     } catch (error) {
       console.error('[OnboardingContext] Submit error:', error);
@@ -162,6 +196,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     isLoading,
     hasCompletedOnboarding,
     markOnboardingComplete,
+    onboardingCompletedTrigger,
   };
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;

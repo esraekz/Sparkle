@@ -27,12 +27,22 @@ export const onboardingService = {
   /**
    * Get user's brand blueprint
    * GET /onboarding/brand-blueprint
+   * Returns null if not found (404)
    */
-  async getBrandBlueprint(): Promise<BrandBlueprint> {
-    const response = await apiClient.get<ApiResponse<BrandBlueprint>>(
-      '/onboarding/brand-blueprint'
-    );
-    return response.data.data;
+  async getBrandBlueprint(): Promise<BrandBlueprint | null> {
+    try {
+      const response = await apiClient.get<ApiResponse<BrandBlueprint>>(
+        '/onboarding/brand-blueprint'
+      );
+      return response.data.data;
+    } catch (error: any) {
+      // 404 is expected for new users without a blueprint
+      if (error.response?.status === 404) {
+        return null;
+      }
+      // Re-throw other errors
+      throw error;
+    }
   },
 
   /**
