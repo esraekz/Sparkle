@@ -24,12 +24,32 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 function AppNavigator() {
   const authContext = useAuth();
-  const { hasCompletedOnboarding, onboardingCompletedTrigger } = useOnboarding();
+  const { hasCompletedOnboarding, onboardingCompletedTrigger, resetOnboardingState } = useOnboarding();
   const [onboardingComplete, setOnboardingComplete] = React.useState<boolean | null>(null);
+  const [previousUserId, setPreviousUserId] = React.useState<string | null>(null);
 
   // Get values directly - they're already booleans from AuthContext
   const isAuthenticated = authContext.isAuthenticated;
   const authLoading = authContext.isLoading;
+  const currentUserId = authContext.user?.id || null;
+
+  // Reset onboarding state when user changes (new login)
+  React.useEffect(() => {
+    if (currentUserId && currentUserId !== previousUserId) {
+      console.log('[App] User changed, resetting onboarding state');
+      console.log('[App] Previous user:', previousUserId);
+      console.log('[App] Current user:', currentUserId);
+      resetOnboardingState();
+      setPreviousUserId(currentUserId);
+      setOnboardingComplete(null); // Force re-check
+    } else if (!currentUserId && previousUserId) {
+      // User logged out
+      console.log('[App] User logged out, resetting state');
+      resetOnboardingState();
+      setPreviousUserId(null);
+      setOnboardingComplete(null);
+    }
+  }, [currentUserId, previousUserId]);
 
   // Check onboarding status when user is authenticated OR when onboarding completes
   React.useEffect(() => {

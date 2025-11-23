@@ -39,6 +39,9 @@ interface OnboardingContextType {
   hasCompletedOnboarding: () => Promise<boolean>;
   markOnboardingComplete: () => Promise<void>;
   onboardingCompletedTrigger: number; // Increments when onboarding completes
+
+  // Reset
+  resetOnboardingState: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -175,6 +178,23 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   };
 
+  /**
+   * Reset all onboarding state to initial values
+   * Called when user logs out or switches accounts
+   */
+  const resetOnboardingState = () => {
+    console.log('[OnboardingContext] Resetting onboarding state');
+    setTopics([]);
+    setMainGoal('');
+    setTone('');
+    setInspirations('');
+    setPostingFrequency(3);
+    setPreferredDays(['monday', 'wednesday', 'friday']);
+    setPreferredTime('14');
+    setAskBeforePublish(true);
+    setIsLoading(false);
+  };
+
   const value: OnboardingContextType = {
     topics,
     mainGoal,
@@ -197,6 +217,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     hasCompletedOnboarding,
     markOnboardingComplete,
     onboardingCompletedTrigger,
+    resetOnboardingState,
   };
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
