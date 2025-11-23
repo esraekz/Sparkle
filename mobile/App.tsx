@@ -7,20 +7,6 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { LogBox } from 'react-native';
-
-// Global error handler
-if (__DEV__) {
-  const originalConsoleError = console.error;
-  console.error = (...args) => {
-    if (args[0] && typeof args[0] === 'string' && args[0].includes('Exception in HostFunction')) {
-      console.log('[DETAILED ERROR] Full error details:');
-      console.log('[DETAILED ERROR] Arguments:', JSON.stringify(args, null, 2));
-      console.log('[DETAILED ERROR] Stack trace:', new Error().stack);
-    }
-    originalConsoleError(...args);
-  };
-}
 
 // Providers
 import QueryProvider from './contexts/QueryProvider';
