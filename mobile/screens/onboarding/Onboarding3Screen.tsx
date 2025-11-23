@@ -177,7 +177,7 @@ export default function Onboarding3Screen({ navigation }: Props) {
             placeholder="e.g., Simon Sinek, Brené Brown"
             value={localInspirations}
             onChangeText={setLocalInspirations}
-            multiline={Boolean(true)}
+            multiline={true}
             numberOfLines={2}
           />
         </Section>
@@ -246,10 +246,10 @@ export default function Onboarding3Screen({ navigation }: Props) {
           <View style={styles.switchContainer}>
             <Text style={styles.switchLabel}>Always ask before publishing</Text>
             <Switch
-              value={Boolean(localAskBeforePublish)}
+              value={localAskBeforePublish}
               onValueChange={setLocalAskBeforePublish}
               trackColor={{ false: '#D1D1D1', true: '#F5C842' }}
-              thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : Boolean(localAskBeforePublish) ? '#F5C842' : '#F4F3F4'}
+              thumbColor={Platform.OS === 'ios' ? '#FFFFFF' : localAskBeforePublish ? '#F5C842' : '#F4F3F4'}
             />
           </View>
           <Text style={styles.switchHint}>
