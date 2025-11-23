@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // API Configuration
 const API_BASE_URL = __DEV__
-  ? 'http://localhost:8000/api/v1' // Development: local backend
+  ? 'http://192.168.0.160:8000/api/v1' // Development: local backend
   : 'https://api.sparkle.app/api/v1'; // Production: deployed backend
 
 const AUTH_TOKEN_KEY = '@sparkle_auth_token';
