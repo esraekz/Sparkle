@@ -2,9 +2,12 @@
 
 ## Overview
 
-All tables use the **sparkle** schema in PostgreSQL (Supabase).
+All tables use the **public** schema in PostgreSQL (Supabase).
 
-**Migration**: `/backend/migrations/001_initial_schema.sql`
+**Initial Migration**: `/backend/migrations/001_initial_schema.sql`
+**Phase 1 Migrations**: `/backend/migrations/02_move_all_tables_to_public_schema.sql`
+
+> **Note**: Tables were originally created in the `sparkle` schema but were moved to `public` schema for Phase 1 to work with Supabase REST API (PostgREST), which only exposes `public` and `graphql_public` schemas by default.
 
 ## Tables (9 Total)
 
@@ -23,16 +26,22 @@ User accounts and profiles
 User's onboarding preferences (one per user)
 
 **Key Columns**:
-- `user_id` (UUID, FK, UNIQUE) - Links to user
+- `user_id` (TEXT, UNIQUE) - Phase 1: TEXT (UUID5 from email). Phase 2: Will be UUID with FK to users
 - `topics` (TEXT[]) - Selected interests: ["AI", "Leadership"]
-- `goal` (TEXT) - LinkedIn goal
-- `tone` (TEXT) - Voice style: "Warm & Authentic"
-- `posting_frequency` (TEXT) - "2-3x/week"
-- `preferred_days` (TEXT[]) - ["Tue", "Thu"]
-- `best_time_to_post` (TIME) - 14:00
+- `goal` (TEXT) - LinkedIn goal (mapped from API field `main_goal`)
+- `inspiration_sources` (TEXT[]) - People/brands to learn from (mapped from API field `inspirations`)
+- `tone` (TEXT) - Voice style: "Professional", "Casual", "Thought Leader", "Storyteller"
+- `posting_frequency` (TEXT) - "2-3x/week", "Every day" (mapped from API field `posts_per_week`)
+- `preferred_days` (TEXT[]) - ["monday", "wednesday", "friday"]
+- `best_time_to_post` (TIME) - 14:00:00 (mapped from API field `preferred_hours[0]`)
 - `ask_before_publish` (BOOLEAN) - Default TRUE
 
-**RLS**: User can only see their own blueprint
+**RLS**: Disabled for Phase 1 (mock auth). Will be re-enabled in Phase 2.
+
+**Phase 1 Notes**:
+- `user_id` is TEXT instead of UUID because mock auth generates UUID5 from email
+- No foreign key constraint to `sparkle_users` table in Phase 1
+- Field mapping required between API model and database columns (see `backend/services/onboarding_service.py`)
 
 ### sparkle_posts
 All user posts (drafts, scheduled, published)
@@ -154,8 +163,10 @@ sparkle_posts (*) >── (1) sparkle_news_articles [optional]
 - Vectors: vector(1536) for embeddings
 
 ### Row Level Security (RLS)
-- **User tables**: Can only access own data (`auth.uid() = user_id`)
-- **Public tables**: All users can read (news, trending, creators)
+- **Phase 1 (Current)**: RLS disabled on all tables for mock authentication
+- **Phase 2 (Future)**: RLS will be enabled when switching to real Supabase Auth
+  - **User tables**: Can only access own data (`auth.uid() = user_id`)
+  - **Public tables**: All users can read (news, trending, creators)
 
 ### Auto-Updates
 - `updated_at` triggers on: users, brand_blueprints, posts
@@ -174,22 +185,24 @@ sparkle_posts (*) >── (1) sparkle_news_articles [optional]
 /backend/migrations/001_initial_schema.sql
 ```
 
-### Verify
+### Verify Tables in Public Schema
 ```sql
-SELECT table_name FROM information_schema.tables 
-WHERE table_schema = 'sparkle';
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public' AND table_name LIKE 'sparkle_%';
 ```
 
-### Rollback
+### Check RLS Status
 ```sql
-DROP SCHEMA sparkle CASCADE;
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public' AND tablename LIKE 'sparkle_%';
 ```
 
 ---
 
 ## Design Decisions
 
-**Why sparkle schema?** Namespace isolation from Supabase internals
+**Why public schema for Phase 1?** Supabase REST API (PostgREST) only exposes `public` and `graphql_public` schemas by default. Moving tables to `public` schema allows the backend to access them via Supabase client library without custom PostgREST configuration.
 
 **Why UUID keys?** Better for distributed systems, no enumeration attacks
 
@@ -199,7 +212,26 @@ DROP SCHEMA sparkle CASCADE;
 
 **Why TEXT[] for topics?** Simpler than JOINs, GIN index for fast queries
 
+**Why service_role key for Phase 1?** Bypasses RLS policies since mock auth doesn't provide `auth.uid()`. Safe for server-side use only (never expose in client apps).
+
 ---
 
-**Status**: Phase 1 MVP Ready  
-**Migration Version**: 001
+## Phase 1 Current State
+
+**Schema**: All tables in `public` schema
+**Authentication**: Mock JWT tokens (UUID5 from email)
+**RLS**: Disabled (will be re-enabled in Phase 2)
+**API Key**: service_role (server-side only)
+**Database**: Real Supabase persistence
+**Status**: Onboarding complete and working ✅
+
+**Next Steps**:
+1. Build Home screen
+2. Build Post creation screen
+3. Connect posts service to database
+4. Add AI post generation
+
+---
+
+**Migration Version**: 002 (Phase 1)
+**Last Updated**: 2025-11-23
