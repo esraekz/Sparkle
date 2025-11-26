@@ -15,6 +15,7 @@ const Stack = createNativeStackNavigator<PostStackParamList>();
 export default function PostStackNavigator() {
   return (
     <Stack.Navigator
+      initialRouteName="PostsList"
       screenOptions={{
         headerStyle: {
           backgroundColor: Colors.background,

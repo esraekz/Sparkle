@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
 import Colors from '../constants/Colors';
 import Layout from '../constants/Layout';
 
@@ -71,6 +72,17 @@ export default function TabNavigator() {
             <PlusIcon color={color} size={size} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Reset the Post stack to PostsList when tab is pressed
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Post', state: { routes: [{ name: 'PostsList' }] } }],
+              })
+            );
+          },
+        })}
       />
       <Tab.Screen
         name="Social"

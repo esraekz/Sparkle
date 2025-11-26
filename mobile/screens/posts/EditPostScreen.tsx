@@ -42,6 +42,7 @@ export default function EditPostScreen() {
   const [hashtags, setHashtags] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Fetch post data
   const { data: post, isLoading } = useQuery({
@@ -99,6 +100,30 @@ export default function EditPostScreen() {
       .split(',')
       .map(tag => tag.trim().replace(/^#/, ''))
       .filter(tag => tag.length > 0);
+  };
+
+  const handleSparkleAI = () => {
+    Alert.alert(
+      '✨ Sparkle AI',
+      'AI-powered content generation coming soon!',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleUploadImage = () => {
+    Alert.alert(
+      'Upload Image',
+      'Image upload feature coming soon!',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleGenerateImage = () => {
+    Alert.alert(
+      'Generate with AI',
+      'AI image generation coming soon!',
+      [{ text: 'OK' }]
+    );
   };
 
   const handleSaveDraft = async () => {
@@ -258,7 +283,7 @@ export default function EditPostScreen() {
           <View style={styles.section}>
             <TextInput
               style={styles.contentInput}
-              placeholder="Write your post here..."
+              placeholder="Write your post here or tap ✨ Sparkle AI to help you get started"
               placeholderTextColor={Colors.gray500}
               multiline
               value={content}
@@ -272,6 +297,14 @@ export default function EditPostScreen() {
             </View>
           </View>
 
+          {/* Sparkle AI Button */}
+          <TouchableOpacity
+            style={styles.sparkleButton}
+            onPress={handleSparkleAI}
+          >
+            <Text style={styles.sparkleText}>✨ Sparkle AI</Text>
+          </TouchableOpacity>
+
           {/* Hashtags */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Hashtags</Text>
@@ -282,6 +315,108 @@ export default function EditPostScreen() {
               value={hashtags}
               onChangeText={setHashtags}
             />
+            <Text style={styles.hint}>
+              Tip: Use 3-5 relevant hashtags for better reach
+            </Text>
+          </View>
+
+          {/* Add Visual */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Add Visual</Text>
+            <View style={styles.visualButtons}>
+              <TouchableOpacity
+                style={styles.visualButton}
+                onPress={handleUploadImage}
+              >
+                <Text style={styles.visualButtonIcon}>📷</Text>
+                <Text style={styles.visualButtonText}>Upload Image</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.visualButton, styles.visualButtonAI]}
+                onPress={handleGenerateImage}
+              >
+                <Text style={styles.visualButtonIcon}>✨</Text>
+                <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* LinkedIn Preview */}
+          <View style={styles.previewSection}>
+            <TouchableOpacity
+              style={styles.previewHeader}
+              onPress={() => setShowPreview(!showPreview)}
+            >
+              <Text style={styles.sectionTitle}>LinkedIn Preview</Text>
+              <Text style={styles.previewToggle}>
+                {showPreview ? 'Hide ▲' : 'Show ▼'}
+              </Text>
+            </TouchableOpacity>
+
+            {!showPreview ? (
+              <Text style={styles.previewHint}>
+                See how your post will look on LinkedIn
+              </Text>
+            ) : (
+              <View style={styles.linkedinPreview}>
+                {/* LinkedIn Post Card */}
+                <View style={styles.linkedinCard}>
+                  {/* Header */}
+                  <View style={styles.linkedinHeader}>
+                    <View style={styles.linkedinAvatar}>
+                      <Text style={styles.linkedinAvatarText}>👤</Text>
+                    </View>
+                    <View style={styles.linkedinHeaderText}>
+                      <Text style={styles.linkedinName}>Your Name</Text>
+                      <Text style={styles.linkedinMeta}>Your Headline • Now</Text>
+                    </View>
+                  </View>
+
+                  {/* Content */}
+                  {content.trim() ? (
+                    <Text style={styles.linkedinContent}>{content}</Text>
+                  ) : (
+                    <Text style={styles.linkedinContentPlaceholder}>
+                      Your post content will appear here...
+                    </Text>
+                  )}
+
+                  {/* Hashtags */}
+                  {hashtags.trim() && (
+                    <View style={styles.linkedinHashtags}>
+                      {parseHashtags(hashtags).map((tag, index) => (
+                        <Text key={index} style={styles.linkedinHashtag}>
+                          #{tag}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Engagement Bar */}
+                  <View style={styles.linkedinEngagement}>
+                    <Text style={styles.linkedinEngagementText}>👍 💡 👏</Text>
+                    <Text style={styles.linkedinEngagementCount}>0 • 0 comments</Text>
+                  </View>
+
+                  {/* Actions */}
+                  <View style={styles.linkedinActions}>
+                    <View style={styles.linkedinAction}>
+                      <Text style={styles.linkedinActionText}>👍 Like</Text>
+                    </View>
+                    <View style={styles.linkedinAction}>
+                      <Text style={styles.linkedinActionText}>💬 Comment</Text>
+                    </View>
+                    <View style={styles.linkedinAction}>
+                      <Text style={styles.linkedinActionText}>🔄 Repost</Text>
+                    </View>
+                    <View style={styles.linkedinAction}>
+                      <Text style={styles.linkedinActionText}>📤 Send</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
           </View>
 
           {/* Post Info */}
@@ -331,31 +466,38 @@ export default function EditPostScreen() {
 
         {/* Bottom Action Bar */}
         <View style={styles.bottomBar}>
-          <TouchableOpacity
-            style={styles.discardButton}
-            onPress={handleDiscard}
-            disabled={isSaving}
-          >
-            <Text style={styles.discardText}>Discard</Text>
-          </TouchableOpacity>
+          {/* Left side - Icon buttons */}
+          <View style={styles.iconButtons}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={handleDiscard}
+              disabled={isSaving}
+            >
+              <Text style={styles.iconButtonText}>🗑️</Text>
+            </TouchableOpacity>
 
-          <View style={styles.actionButtons}>
+            {post.status === 'draft' && (
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setShowScheduleModal(true)}
+                disabled={isSaving || !content.trim() || isOverLimit}
+              >
+                <Text style={styles.iconButtonText}>📅</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Right side - Primary action buttons */}
+          <View style={styles.primaryButtons}>
             {post.status === 'draft' && (
               <>
                 <Button
-                  title="Save"
+                  title="Save Draft"
                   variant="outline"
                   onPress={handleSaveDraft}
                   loading={isSaving}
                   disabled={isSaving || !content.trim() || isOverLimit}
-                  style={styles.smallButton}
-                />
-                <Button
-                  title="Schedule"
-                  variant="secondary"
-                  onPress={() => setShowScheduleModal(true)}
-                  disabled={isSaving || !content.trim() || isOverLimit}
-                  style={styles.smallButton}
+                  style={styles.actionButton}
                 />
                 <Button
                   title="Post Now"
@@ -363,7 +505,7 @@ export default function EditPostScreen() {
                   onPress={handlePostNow}
                   loading={isSaving}
                   disabled={isSaving || !content.trim() || isOverLimit}
-                  style={styles.smallButton}
+                  style={styles.actionButton}
                 />
               </>
             )}
@@ -376,7 +518,7 @@ export default function EditPostScreen() {
                   onPress={handleSaveDraft}
                   loading={isSaving}
                   disabled={isSaving || !content.trim() || isOverLimit}
-                  style={styles.mediumButton}
+                  style={styles.actionButton}
                 />
                 <Button
                   title="Post Now"
@@ -384,7 +526,7 @@ export default function EditPostScreen() {
                   onPress={handlePostNow}
                   loading={isSaving}
                   disabled={isSaving || !content.trim() || isOverLimit}
-                  style={styles.mediumButton}
+                  style={styles.actionButton}
                 />
               </>
             )}
@@ -397,7 +539,7 @@ export default function EditPostScreen() {
                   await Clipboard.setStringAsync(content.trim());
                   Alert.alert('Copied!', 'Post copied to clipboard');
                 }}
-                style={styles.largeButton}
+                style={styles.fullWidthButton}
               />
             )}
           </View>
@@ -441,7 +583,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.lg,
+    paddingTop: 12,
+    paddingBottom: Layout.spacing.lg,
   },
   section: {
     marginBottom: Layout.spacing.lg,
@@ -498,7 +642,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Layout.spacing.sm,
+    justifyContent: 'space-between',
     padding: Layout.spacing.lg,
     backgroundColor: Colors.white,
     borderTopWidth: 1,
@@ -509,29 +653,202 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 8,
   },
-  discardButton: {
-    padding: Layout.spacing.sm,
-  },
-  discardText: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.error,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  actionButtons: {
-    flex: 1,
+  iconButtons: {
     flexDirection: 'row',
+    gap: Layout.spacing.sm,
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.gray100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  iconButtonText: {
+    fontSize: 20,
+  },
+  primaryButtons: {
+    flexDirection: 'row',
+    gap: Layout.spacing.sm,
+    flex: 1,
+    marginLeft: Layout.spacing.md,
+  },
+  actionButton: {
+    flex: 1,
+  },
+  fullWidthButton: {
+    flex: 1,
+  },
+  sparkleButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: Layout.borderRadius.md,
+    padding: Layout.spacing.sm,
+    alignItems: 'center',
+    marginBottom: Layout.spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.primaryDark,
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: Layout.spacing.xs,
   },
-  smallButton: {
-    flex: 1,
-    paddingHorizontal: Layout.spacing.xs,
-    minWidth: 0,
+  sparkleText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text,
   },
-  mediumButton: {
-    flex: 1,
-    paddingHorizontal: Layout.spacing.sm,
+  hint: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: Layout.spacing.xs,
   },
-  largeButton: {
+  visualButtons: {
+    flexDirection: 'row',
+    gap: Layout.spacing.sm,
+  },
+  visualButton: {
     flex: 1,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Layout.borderRadius.md,
+    padding: Layout.spacing.sm,
+    alignItems: 'center',
+    borderStyle: 'dashed',
+  },
+  visualButtonAI: {
+    backgroundColor: '#FFF9E6',
+    borderColor: Colors.primary,
+  },
+  visualButtonIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  visualButtonText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text,
+  },
+  visualButtonTextAI: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  previewSection: {
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Layout.borderRadius.md,
+    padding: Layout.spacing.md,
+    marginBottom: Layout.spacing.xl,
+  },
+  previewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.sm,
+  },
+  previewToggle: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  previewHint: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+  },
+  linkedinPreview: {
+    marginTop: Layout.spacing.md,
+  },
+  linkedinCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 12,
+  },
+  linkedinHeader: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  linkedinAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#0077B5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  linkedinAvatarText: {
+    fontSize: 24,
+  },
+  linkedinHeaderText: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  linkedinName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 2,
+  },
+  linkedinMeta: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  linkedinContent: {
+    fontSize: 14,
+    color: '#000000',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  linkedinContentPlaceholder: {
+    fontSize: 14,
+    color: '#999999',
+    lineHeight: 20,
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
+  linkedinHashtags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 12,
+  },
+  linkedinHashtag: {
+    fontSize: 14,
+    color: '#0077B5',
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  linkedinEngagement: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#E0E0E0',
+    marginBottom: 8,
+  },
+  linkedinEngagementText: {
+    fontSize: 12,
+  },
+  linkedinEngagementCount: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  linkedinActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  linkedinAction: {
+    alignItems: 'center',
+  },
+  linkedinActionText: {
+    fontSize: 12,
+    color: '#666666',
+    fontWeight: '500',
   },
 });
