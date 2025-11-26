@@ -9,8 +9,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Colors from '../../constants/Colors';
 import Typography from '../../constants/Typography';
 import Layout from '../../constants/Layout';
@@ -22,9 +23,12 @@ import EmptyState from '../../components/EmptyState';
 import { onboardingService } from '../../services/onboarding.service';
 import { postService } from '../../services/post.service';
 import { analyticsService } from '../../services/analytics.service';
-import type { MainTabParamList, HomeStats } from '../../types';
+import type { MainTabParamList, PostStackParamList, HomeStats } from '../../types';
 
-type HomeScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Home'>;
+type HomeScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Home'>,
+  NativeStackNavigationProp<PostStackParamList>
+>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -122,6 +126,20 @@ export default function HomeScreen() {
           <Text style={styles.scrollIndicatorText}>⌄</Text>
         </View>
       </View>
+
+      {/* Floating Create Post Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => {
+          // Navigate directly to CreatePost within Post tab (no flash)
+          (navigation as any).navigate('Post', {
+            screen: 'CreatePost',
+          });
+        }}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
 
       <ScrollView
         style={styles.scrollView}
@@ -358,5 +376,30 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: Colors.primary,
     fontWeight: Typography.fontWeight.bold,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: Colors.primaryDark,
+    zIndex: 100,
+  },
+  fabIcon: {
+    fontSize: 32,
+    color: Colors.white,
+    fontWeight: Typography.fontWeight.bold,
+    lineHeight: 32,
   },
 });
