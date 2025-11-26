@@ -60,18 +60,22 @@ async def list_posts(
     Get all posts for the current user.
 
     **Query Parameters:**
-    - `status`: Filter by post status (draft/scheduled/published)
+    - `status_filter`: Filter by post status (draft/scheduled/published)
     - `limit`: Maximum number of posts (1-100, default 50)
 
     **Examples:**
     - `/posts` - Get all posts
-    - `/posts?status=draft` - Get only drafts
-    - `/posts?status=scheduled&limit=10` - Get 10 scheduled posts
+    - `/posts?status_filter=draft` - Get only drafts
+    - `/posts?status_filter=scheduled&limit=10` - Get 10 scheduled posts
 
     **Phase 1**: Uses mock authentication (no token required)
 
     **Returns**: List of posts with count
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"📋 GET /posts - status_filter={status_filter}, limit={limit}")
+
     user_id = current_user.get("id")
     result = await get_posts(user_id, status_filter, limit)
 

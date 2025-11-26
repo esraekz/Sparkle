@@ -25,12 +25,12 @@ export const postService = {
 
   /**
    * Get all posts for current user
-   * GET /posts?status=draft&limit=50
+   * GET /posts?status_filter=draft&limit=50
    */
   async getPosts(status?: string, limit: number = 50): Promise<PostListResponse> {
     const params: any = { limit };
     if (status) {
-      params.status = status;
+      params.status_filter = status;  // Backend expects 'status_filter' not 'status'
     }
 
     const response = await apiClient.get<ApiResponse<PostListResponse>>('/posts', { params });

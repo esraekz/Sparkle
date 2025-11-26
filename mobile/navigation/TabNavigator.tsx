@@ -6,7 +6,7 @@ import Layout from '../constants/Layout';
 
 // Import screens
 import HomeScreen from '../screens/home/HomeScreen';
-import CreatePostScreen from '../screens/posts/CreatePostScreen';
+import PostStackNavigator from './PostStackNavigator';
 import SocialScreen from '../screens/social/SocialScreen';
 import AnalyticsScreen from '../screens/analytics/AnalyticsScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
@@ -53,6 +53,7 @@ export default function TabNavigator() {
         component={HomeScreen}
         options={{
           title: 'Home',
+          headerShown: false, // Hide header - HomeScreen has its own
           tabBarIcon: ({ color, size }) => (
             // TODO: Replace with proper icon component
             <HomeIcon color={color} size={size} />
@@ -61,9 +62,10 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="Post"
-        component={CreatePostScreen}
+        component={PostStackNavigator}
         options={{
-          title: 'Create',
+          title: 'Posts',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             // TODO: Replace with proper icon component
             <PlusIcon color={color} size={size} />

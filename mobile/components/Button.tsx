@@ -78,6 +78,14 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: Colors.primary,
+    // Enhanced shadow for prominence
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3, // Android shadow
+    borderWidth: 1,
+    borderColor: Colors.primaryDark,
   },
   secondaryButton: {
     backgroundColor: Colors.gray200,
@@ -96,7 +104,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.fontWeight.semibold,
   },
   primaryText: {
-    color: Colors.white,
+    color: Colors.text,
   },
   secondaryText: {
     color: Colors.text,

@@ -122,6 +122,20 @@ export interface PostListResponse {
 }
 
 // ============================================
+// Analytics & Home Stats Types
+// ============================================
+
+export interface HomeStats {
+  postsThisWeek: number;
+  weeklyGoal: number;
+  views: number | null;
+  viewsTrend: number | null;
+  engagementRate: number | null;
+  engagementTrend: number | null;
+  consistencyStreak: number;
+}
+
+// ============================================
 // API Response Types
 // ============================================
 
@@ -157,7 +171,7 @@ export type MainTabParamList = {
 };
 
 export type PostStackParamList = {
+  PostsList: undefined;
   CreatePost: undefined;
   EditPost: { postId: string };
-  Schedule: { postId: string };
 };

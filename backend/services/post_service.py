@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from database import supabase
 from models.post import PostCreate, PostUpdate, PostStatus
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -270,7 +270,13 @@ async def schedule_post(user_id: str, post_id: str, scheduled_for: datetime) -> 
         await _verify_post_ownership(user_id, post_id)
 
         # Validate scheduled_for is in the future
-        if scheduled_for <= datetime.now():
+        # Use timezone-aware comparison
+        now = datetime.now(timezone.utc)
+        # Make scheduled_for timezone-aware if it isn't already
+        if scheduled_for.tzinfo is None:
+            scheduled_for = scheduled_for.replace(tzinfo=timezone.utc)
+
+        if scheduled_for <= now:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Scheduled time must be in the future"
@@ -329,7 +335,7 @@ async def publish_post(user_id: str, post_id: str) -> Dict[str, Any]:
         # Update post status and published_at
         update_data = {
             "status": PostStatus.PUBLISHED.value,
-            "published_at": datetime.now().isoformat()
+            "published_at": datetime.now(timezone.utc).isoformat()
         }
 
         result = supabase.table("sparkle_posts").update(update_data).eq("id", post_id).execute()
