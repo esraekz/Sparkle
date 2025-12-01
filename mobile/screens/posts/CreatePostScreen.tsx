@@ -365,6 +365,30 @@ export default function CreatePostScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Add Visual</Text>
 
+            {/* Always show action buttons first */}
+            <View style={styles.visualButtons}>
+              <TouchableOpacity
+                style={styles.visualButton}
+                onPress={handleUploadImage}
+                disabled={isUploadingImage}
+              >
+                <Text style={styles.visualButtonIcon}>📷</Text>
+                <Text style={styles.visualButtonText}>
+                  {selectedImageUri ? 'Replace Image' : 'Upload Image'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.visualButton, styles.visualButtonAI]}
+                onPress={handleGenerateImage}
+                disabled={isUploadingImage}
+              >
+                <Text style={styles.visualButtonIcon}>✨</Text>
+                <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Image preview below buttons */}
             {selectedImageUri && (
               <View style={styles.imagePreviewContainer}>
                 <Image
@@ -387,29 +411,6 @@ export default function CreatePostScreen() {
                 </TouchableOpacity>
               </View>
             )}
-
-            {/* Always show action buttons */}
-            <View style={styles.visualButtons}>
-              <TouchableOpacity
-                style={styles.visualButton}
-                onPress={handleUploadImage}
-                disabled={isUploadingImage}
-              >
-                <Text style={styles.visualButtonIcon}>📷</Text>
-                <Text style={styles.visualButtonText}>
-                  {selectedImageUri ? 'Replace Image' : 'Upload Image'}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.visualButton, styles.visualButtonAI]}
-                onPress={handleGenerateImage}
-                disabled={isUploadingImage}
-              >
-                <Text style={styles.visualButtonIcon}>✨</Text>
-                <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
-              </TouchableOpacity>
-            </View>
           </View>
 
           {/* LinkedIn Preview */}
@@ -677,6 +678,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: Colors.border,
+    marginTop: Layout.spacing.md,
   },
   imagePreview: {
     width: '100%',

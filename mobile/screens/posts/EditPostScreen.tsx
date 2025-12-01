@@ -397,23 +397,7 @@ export default function EditPostScreen() {
               </View>
             )}
 
-            {selectedImage && (
-              <View style={styles.imagePreviewContainer}>
-                <Image
-                  source={{ uri: selectedImage }}
-                  style={styles.imagePreview}
-                  resizeMode="cover"
-                />
-                <TouchableOpacity
-                  style={styles.removeImageButton}
-                  onPress={handleRemoveImage}
-                >
-                  <Text style={styles.removeImageText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* Always show action buttons */}
+            {/* Always show action buttons first */}
             <View style={styles.visualButtons}>
               <TouchableOpacity
                 style={styles.visualButton}
@@ -435,6 +419,23 @@ export default function EditPostScreen() {
                 <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Image preview below buttons */}
+            {selectedImage && (
+              <View style={styles.imagePreviewContainer}>
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={styles.imagePreview}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={handleRemoveImage}
+                >
+                  <Text style={styles.removeImageText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* LinkedIn Preview */}
@@ -968,6 +969,7 @@ const styles = StyleSheet.create({
   },
   imagePreviewContainer: {
     position: 'relative',
+    marginTop: Layout.spacing.md,
     marginBottom: Layout.spacing.sm,
   },
   imagePreview: {
