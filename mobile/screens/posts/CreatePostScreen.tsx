@@ -9,6 +9,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -16,13 +18,15 @@ import { useNavigation, CompositeNavigationProp } from '@react-navigation/native
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 import Colors from '../../constants/Colors';
 import Typography from '../../constants/Typography';
 import Layout from '../../constants/Layout';
 import Button from '../../components/Button';
 import ScheduleModal from '../../components/ScheduleModal';
+import AIActionsModal from '../../components/AIActionsModal';
 import { postService } from '../../services/post.service';
-import type { MainTabParamList, PostStackParamList } from '../../types';
+import type { MainTabParamList, PostStackParamList, AIAssistResponse } from '../../types';
 
 type CreatePostScreenNavigationProp = CompositeNavigationProp<
   NativeStackNavigationProp<PostStackParamList, 'CreatePost'>,
@@ -40,6 +44,10 @@ export default function CreatePostScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Create post mutation
   const createPostMutation = useMutation({
@@ -67,19 +75,81 @@ export default function CreatePostScreen() {
   });
 
   const handleSparkleAI = () => {
-    Alert.alert(
-      '✨ Sparkle AI',
-      'AI-powered content generation coming soon!',
-      [{ text: 'OK' }]
-    );
+    setShowAIModal(true);
   };
 
-  const handleUploadImage = () => {
-    Alert.alert(
-      'Upload Image',
-      'Image upload feature coming soon!',
-      [{ text: 'OK' }]
-    );
+  const handleAIApply = (result: AIAssistResponse) => {
+    setContent(result.content);
+    setHashtags(result.hashtags.join(', '));
+  };
+
+  const handleUseHook = (hook: string) => {
+    // Prepend the hook to the current content
+    const currentContent = content.trim();
+    const newContent = currentContent
+      ? `${hook}\n\n${currentContent}`
+      : hook;
+    setContent(newContent);
+  };
+
+  const handleUploadImage = async () => {
+    try {
+      // Request permissions
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert(
+          'Permission Required',
+          'Please allow access to your photo library to upload images.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.8,
+        aspect: [16, 9],
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+
+        // Check file size (max 2MB)
+        if (asset.fileSize && asset.fileSize > 2 * 1024 * 1024) {
+          Alert.alert(
+            'File Too Large',
+            'Please select an image smaller than 2MB',
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+
+        // Store local URI for preview
+        setSelectedImageUri(asset.uri);
+
+        // Upload to backend
+        setIsUploadingImage(true);
+        try {
+          const imageUrl = await postService.uploadImage(asset.uri);
+          setUploadedImageUrl(imageUrl);
+        } catch (error: any) {
+          Alert.alert('Upload Failed', error.message || 'Failed to upload image');
+          setSelectedImageUri(null);
+        } finally {
+          setIsUploadingImage(false);
+        }
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to pick image');
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImageUri(null);
+    setUploadedImageUrl(null);
   };
 
   const handleGenerateImage = () => {
@@ -108,6 +178,7 @@ export default function CreatePostScreen() {
       await createPostMutation.mutateAsync({
         content: content.trim(),
         hashtags: parseHashtags(hashtags),
+        image_url: uploadedImageUrl,
         source_type: 'manual',
       });
 
@@ -117,6 +188,8 @@ export default function CreatePostScreen() {
           onPress: () => {
             setContent('');
             setHashtags('');
+            setSelectedImageUri(null);
+            setUploadedImageUrl(null);
             navigation.navigate('PostsList');
           },
         },
@@ -140,6 +213,7 @@ export default function CreatePostScreen() {
       const post = await createPostMutation.mutateAsync({
         content: content.trim(),
         hashtags: parseHashtags(hashtags),
+        image_url: uploadedImageUrl,
         source_type: 'manual',
       });
 
@@ -158,6 +232,8 @@ export default function CreatePostScreen() {
             onPress: () => {
               setContent('');
               setHashtags('');
+              setSelectedImageUri(null);
+              setUploadedImageUrl(null);
               navigation.navigate('PostsList');
             },
           },
@@ -178,6 +254,7 @@ export default function CreatePostScreen() {
       const post = await createPostMutation.mutateAsync({
         content: content.trim(),
         hashtags: parseHashtags(hashtags),
+        image_url: uploadedImageUrl,
         source_type: 'manual',
       });
 
@@ -193,6 +270,8 @@ export default function CreatePostScreen() {
           onPress: () => {
             setContent('');
             setHashtags('');
+            setSelectedImageUri(null);
+            setUploadedImageUrl(null);
             navigation.navigate('PostsList');
           },
         },
@@ -216,6 +295,8 @@ export default function CreatePostScreen() {
           onPress: () => {
             setContent('');
             setHashtags('');
+            setSelectedImageUri(null);
+            setUploadedImageUrl(null);
             navigation.navigate('PostsList');
           },
         },
@@ -283,23 +364,49 @@ export default function CreatePostScreen() {
           {/* Add Visual */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Add Visual</Text>
-            <View style={styles.visualButtons}>
-              <TouchableOpacity
-                style={styles.visualButton}
-                onPress={handleUploadImage}
-              >
-                <Text style={styles.visualButtonIcon}>📷</Text>
-                <Text style={styles.visualButtonText}>Upload Image</Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.visualButton, styles.visualButtonAI]}
-                onPress={handleGenerateImage}
-              >
-                <Text style={styles.visualButtonIcon}>✨</Text>
-                <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
-              </TouchableOpacity>
-            </View>
+            {selectedImageUri ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image
+                  source={{ uri: selectedImageUri }}
+                  style={styles.imagePreview}
+                  resizeMode="cover"
+                />
+                {isUploadingImage && (
+                  <View style={styles.uploadingOverlay}>
+                    <ActivityIndicator size="large" color={Colors.primary} />
+                    <Text style={styles.uploadingText}>Uploading...</Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={handleRemoveImage}
+                  disabled={isUploadingImage}
+                >
+                  <Text style={styles.removeImageText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.visualButtons}>
+                <TouchableOpacity
+                  style={styles.visualButton}
+                  onPress={handleUploadImage}
+                  disabled={isUploadingImage}
+                >
+                  <Text style={styles.visualButtonIcon}>📷</Text>
+                  <Text style={styles.visualButtonText}>Upload Image</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.visualButton, styles.visualButtonAI]}
+                  onPress={handleGenerateImage}
+                  disabled={isUploadingImage}
+                >
+                  <Text style={styles.visualButtonIcon}>✨</Text>
+                  <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* LinkedIn Preview */}
@@ -340,6 +447,15 @@ export default function CreatePostScreen() {
                     <Text style={styles.linkedinContentPlaceholder}>
                       Your post content will appear here...
                     </Text>
+                  )}
+
+                  {/* Image Preview in LinkedIn Card */}
+                  {selectedImageUri && (
+                    <Image
+                      source={{ uri: selectedImageUri }}
+                      style={styles.linkedinImage}
+                      resizeMode="cover"
+                    />
                   )}
 
                   {/* Hashtags */}
@@ -427,6 +543,15 @@ export default function CreatePostScreen() {
           visible={showScheduleModal}
           onClose={() => setShowScheduleModal(false)}
           onSchedule={handleSchedule}
+        />
+
+        {/* AI Actions Modal */}
+        <AIActionsModal
+          visible={showAIModal}
+          currentText={content}
+          onClose={() => setShowAIModal(false)}
+          onApply={handleAIApply}
+          onUseHook={handleUseHook}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -543,6 +668,48 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontWeight: Typography.fontWeight.medium,
   },
+  imagePreviewContainer: {
+    position: 'relative',
+    borderRadius: Layout.borderRadius.md,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    backgroundColor: Colors.gray100,
+  },
+  uploadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadingText: {
+    marginTop: Layout.spacing.sm,
+    color: Colors.white,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.white,
+  },
+  removeImageText: {
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: Typography.fontWeight.bold,
+  },
   previewSection: {
     backgroundColor: Colors.white,
     borderWidth: 1,
@@ -629,6 +796,13 @@ const styles = StyleSheet.create({
     color: '#0077B5',
     marginRight: 8,
     marginBottom: 4,
+  },
+  linkedinImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 4,
+    marginBottom: 12,
+    backgroundColor: Colors.gray100,
   },
   linkedinEngagement: {
     flexDirection: 'row',

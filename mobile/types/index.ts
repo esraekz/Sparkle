@@ -82,6 +82,7 @@ export interface Post {
   user_id: string;
   content: string;
   hashtags: string[];
+  image_url: string | null;
   status: PostStatus;
   source_type: SourceType;
   source_article_id: string | null;
@@ -102,6 +103,7 @@ export interface EngagementMetrics {
 export interface PostCreate {
   content: string;
   hashtags?: string[];
+  image_url?: string;
   source_type?: SourceType;
   source_article_id?: string;
 }
@@ -109,6 +111,7 @@ export interface PostCreate {
 export interface PostUpdate {
   content?: string;
   hashtags?: string[];
+  image_url?: string;
 }
 
 export interface PostSchedule {
@@ -175,3 +178,20 @@ export type PostStackParamList = {
   CreatePost: undefined;
   EditPost: { postId: string };
 };
+
+// ============================================
+// AI Generation Types
+// ============================================
+
+export type AIAction = 'continue' | 'rephrase' | 'grammar' | 'engagement' | 'shorter';
+
+export interface AIAssistRequest {
+  action: AIAction;
+  text: string;
+}
+
+export interface AIAssistResponse {
+  content: string;
+  hashtags: string[];
+  hook_suggestion: string;
+}

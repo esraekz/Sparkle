@@ -84,6 +84,42 @@ export const postService = {
     const response = await apiClient.post<ApiResponse<Post>>(`/posts/${postId}/publish`);
     return response.data.data;
   },
+
+  /**
+   * Upload image for post
+   * POST /posts/upload-image
+   */
+  async uploadImage(imageUri: string): Promise<string> {
+    // Create FormData for image upload
+    const formData = new FormData();
+
+    // Extract filename from URI
+    const filename = imageUri.split('/').pop() || 'image.jpg';
+
+    // Determine file type from extension
+    const fileType = filename.toLowerCase().endsWith('.png')
+      ? 'image/png'
+      : 'image/jpeg';
+
+    // Add image to FormData
+    formData.append('file', {
+      uri: imageUri,
+      name: filename,
+      type: fileType,
+    } as any);
+
+    const response = await apiClient.post<ApiResponse<{ image_url: string }>>(
+      '/posts/upload-image',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return response.data.data.image_url;
+  },
 };
 
 export default postService;

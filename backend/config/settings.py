@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
+    # LLM Configuration (Phase 1.2 - AI Post Generation)
+    LLM_PROVIDER: str = "openai"  # openai or anthropic
+    OPENAI_API_KEY: str = ""
+    ANTHROPIC_API_KEY: str = ""
+    LLM_MAX_TOKENS: int = 700  # Optimized for LinkedIn posts (reduced from 1000)
+    LLM_TEMPERATURE: float = 0.7
+    LLM_TIMEOUT: float = 30.0  # seconds
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

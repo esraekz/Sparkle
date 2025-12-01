@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Colors from '../constants/Colors';
 import Typography from '../constants/Typography';
 import Layout from '../constants/Layout';
@@ -94,6 +94,16 @@ export default function PostCard({ post, onPress, onDelete }: PostCardProps) {
         {preview}
       </Text>
 
+      {post.image_url && (
+        <Image
+          source={{ uri: post.image_url }}
+          style={styles.image}
+          resizeMode="cover"
+          onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
+          onLoad={() => console.log('Image loaded successfully:', post.image_url)}
+        />
+      )}
+
       {post.hashtags.length > 0 && (
         <View style={styles.hashtagsContainer}>
           {post.hashtags.slice(0, 3).map((tag, index) => (
@@ -152,6 +162,13 @@ const styles = StyleSheet.create({
     color: Colors.text,
     lineHeight: 22,
     marginBottom: Layout.spacing.sm,
+  },
+  image: {
+    width: '100%',
+    height: 150,
+    borderRadius: Layout.borderRadius.sm,
+    marginBottom: Layout.spacing.sm,
+    backgroundColor: Colors.gray100,
   },
   hashtagsContainer: {
     flexDirection: 'row',

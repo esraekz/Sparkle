@@ -22,6 +22,7 @@ class PostBase(BaseModel):
     """Base post model"""
     content: str
     hashtags: Optional[List[str]] = []
+    image_url: Optional[str] = None
 
 
 class PostCreate(PostBase):
@@ -34,6 +35,7 @@ class PostUpdate(BaseModel):
     """Schema for updating a post (all fields optional)"""
     content: Optional[str] = None
     hashtags: Optional[List[str]] = None
+    image_url: Optional[str] = None
 
 
 class PostSchedule(BaseModel):

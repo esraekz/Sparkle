@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from middleware.auth_middleware import get_current_user
 from services.post_service import (
     create_post,
@@ -9,6 +9,8 @@ from services.post_service import (
     schedule_post,
     publish_post
 )
+from services.ai.generation_service import get_generation_service
+from services.storage_service import get_storage_service
 from models.post import (
     PostCreate,
     PostUpdate,
@@ -16,6 +18,7 @@ from models.post import (
     PostResponse,
     PostStatus
 )
+from models.ai import AIAssistRequest, AIAssistResponse
 from typing import Dict, Any, Optional
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
@@ -228,3 +231,146 @@ async def publish_post_now(
         "data": result,
         "message": "Post published successfully"
     }
+
+
+@router.post("/upload-image", response_model=Dict[str, Any])
+async def upload_post_image(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Upload an image for a post.
+
+    **File Requirements:**
+    - Max size: 2MB
+    - Allowed formats: JPG, PNG
+    - Content type: image/jpeg or image/png
+
+    **Returns:**
+    - `image_url`: Public URL of uploaded image
+
+    **Phase 1**: Uses Supabase Storage
+
+    **Example Response:**
+    ```json
+    {
+        "status": "success",
+        "data": {
+            "image_url": "https://...supabase.co/storage/v1/object/public/post-images/..."
+        },
+        "message": "Image uploaded successfully"
+    }
+    ```
+    """
+    user_id = current_user.get("id")
+    storage_service = get_storage_service()
+
+    try:
+        image_url = await storage_service.upload_image(file, user_id)
+
+        return {
+            "status": "success",
+            "data": {"image_url": image_url},
+            "message": "Image uploaded successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Image upload failed: {str(e)}"
+        )
+
+
+@router.post("/ai-assist", response_model=Dict[str, Any])
+async def ai_assist(
+    request: AIAssistRequest,
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Get AI assistance for content generation and improvement.
+
+    **Supported Actions:**
+    - `continue`: Continue writing from current text
+    - `rephrase`: Rewrite text with different words
+    - `grammar`: Fix spelling and grammar errors
+    - `engagement`: Make content more compelling
+    - `shorter`: Condense text while keeping core message
+
+    **All responses include:**
+    - `content`: Generated/improved text
+    - `hashtags`: 3-5 relevant hashtags
+    - `hook_suggestion`: Alternative opening line
+
+    **AI Generation:**
+    - Uses user's brand blueprint (tone, topics, goal) for personalization
+    - Follows LinkedIn best practices
+    - Supports OpenAI GPT-4 and Anthropic Claude
+
+    **Phase 1**: Uses mock authentication (no token required)
+
+    **Example Request:**
+    ```json
+    {
+        "action": "continue",
+        "text": "Leadership is about making tough decisions"
+    }
+    ```
+
+    **Example Response:**
+    ```json
+    {
+        "status": "success",
+        "data": {
+            "content": "Leadership is about making tough decisions. But the best leaders...",
+            "hashtags": ["Leadership", "DecisionMaking", "GrowthMindset"],
+            "hook_suggestion": "The hardest lesson I learned about leadership? Admitting when I was wrong."
+        },
+        "message": "Content generated successfully"
+    }
+    ```
+
+    **Returns**: Generated content with hashtags and hook suggestion
+    """
+    user_id = current_user.get("id")
+    generation_service = get_generation_service()
+
+    try:
+        # Route to appropriate action handler
+        if request.action == "continue":
+            result = await generation_service.continue_writing(user_id, request.text)
+        elif request.action == "rephrase":
+            result = await generation_service.rephrase(user_id, request.text)
+        elif request.action == "grammar":
+            result = await generation_service.correct_grammar(user_id, request.text)
+        elif request.action == "engagement":
+            result = await generation_service.improve_engagement(user_id, request.text)
+        elif request.action == "shorter":
+            result = await generation_service.make_shorter(user_id, request.text)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown action: {request.action}"
+            )
+
+        return {
+            "status": "success",
+            "data": result,
+            "message": "Content generated successfully"
+        }
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        # Configuration errors (missing API key, invalid provider, etc.)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e)
+        )
+    except Exception as e:
+        # Unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"AI service error: {str(e)}"
+        )

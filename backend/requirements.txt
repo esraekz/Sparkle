@@ -18,6 +18,10 @@ python-multipart>=0.0.6
 # HTTP Client (for news APIs, LLM providers)
 httpx>=0.25.0
 
+# AI / LLM Providers (Phase 1.2 - AI Post Generation)
+openai>=1.0.0
+anthropic>=0.7.0
+
 # Optional: Rate Limiting (Phase 2)
 # slowapi>=0.1.9
 

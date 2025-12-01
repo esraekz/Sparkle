@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -16,15 +17,17 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 import Colors from '../../constants/Colors';
 import Typography from '../../constants/Typography';
 import Layout from '../../constants/Layout';
 import Button from '../../components/Button';
 import StatusBadge from '../../components/StatusBadge';
 import ScheduleModal from '../../components/ScheduleModal';
+import AIActionsModal from '../../components/AIActionsModal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { postService } from '../../services/post.service';
-import type { PostStackParamList } from '../../types';
+import type { PostStackParamList, AIAssistResponse } from '../../types';
 
 type EditPostScreenRouteProp = RouteProp<PostStackParamList, 'EditPost'>;
 type EditPostScreenNavigationProp = NativeStackNavigationProp<PostStackParamList, 'EditPost'>;
@@ -43,6 +46,9 @@ export default function EditPostScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Fetch post data
   const { data: post, isLoading } = useQuery({
@@ -55,12 +61,13 @@ export default function EditPostScreen() {
     if (post) {
       setContent(post.content);
       setHashtags(post.hashtags.join(', '));
+      setSelectedImage(post.image_url);
     }
   }, [post]);
 
   // Update post mutation
   const updatePostMutation = useMutation({
-    mutationFn: (data: { content: string; hashtags: string[] }) =>
+    mutationFn: (data: { content: string; hashtags: string[]; image_url?: string }) =>
       postService.updatePost(postId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] });
@@ -103,18 +110,75 @@ export default function EditPostScreen() {
   };
 
   const handleSparkleAI = () => {
-    Alert.alert(
-      '✨ Sparkle AI',
-      'AI-powered content generation coming soon!',
-      [{ text: 'OK' }]
-    );
+    setShowAIModal(true);
   };
 
-  const handleUploadImage = () => {
+  const handleAIApply = (result: AIAssistResponse) => {
+    setContent(result.content);
+    setHashtags(result.hashtags.join(', '));
+  };
+
+  const handleUseHook = (hook: string) => {
+    // Prepend the hook to the current content
+    const currentContent = content.trim();
+    const newContent = currentContent
+      ? `${hook}\n\n${currentContent}`
+      : hook;
+    setContent(newContent);
+  };
+
+  const handleUploadImage = async () => {
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please allow access to your photo library to upload images.'
+        );
+        return;
+      }
+
+      // Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'images',
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+        setIsUploadingImage(true);
+
+        try {
+          // Upload to backend
+          const imageUrl = await postService.uploadImage(imageUri);
+          setSelectedImage(imageUrl);
+          Alert.alert('Success', 'Image uploaded successfully!');
+        } catch (error: any) {
+          Alert.alert('Upload Failed', error.message || 'Failed to upload image');
+        } finally {
+          setIsUploadingImage(false);
+        }
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to select image');
+    }
+  };
+
+  const handleRemoveImage = () => {
     Alert.alert(
-      'Upload Image',
-      'Image upload feature coming soon!',
-      [{ text: 'OK' }]
+      'Remove Image?',
+      'This will remove the image from your post.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => setSelectedImage(null),
+        },
+      ]
     );
   };
 
@@ -137,6 +201,7 @@ export default function EditPostScreen() {
       await updatePostMutation.mutateAsync({
         content: content.trim(),
         hashtags: parseHashtags(hashtags),
+        image_url: selectedImage || undefined,
       });
 
       Alert.alert('Success', 'Draft updated successfully!', [
@@ -158,10 +223,11 @@ export default function EditPostScreen() {
 
     try {
       // First save any content changes
-      if (content !== post?.content || hashtags !== post?.hashtags.join(', ')) {
+      if (content !== post?.content || hashtags !== post?.hashtags.join(', ') || selectedImage !== post?.image_url) {
         await updatePostMutation.mutateAsync({
           content: content.trim(),
           hashtags: parseHashtags(hashtags),
+          image_url: selectedImage || undefined,
         });
       }
 
@@ -190,10 +256,11 @@ export default function EditPostScreen() {
     setIsSaving(true);
     try {
       // First save any content changes
-      if (content !== post?.content || hashtags !== post?.hashtags.join(', ')) {
+      if (content !== post?.content || hashtags !== post?.hashtags.join(', ') || selectedImage !== post?.image_url) {
         await updatePostMutation.mutateAsync({
           content: content.trim(),
           hashtags: parseHashtags(hashtags),
+          image_url: selectedImage || undefined,
         });
       }
 
@@ -323,23 +390,48 @@ export default function EditPostScreen() {
           {/* Add Visual */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Add Visual</Text>
-            <View style={styles.visualButtons}>
-              <TouchableOpacity
-                style={styles.visualButton}
-                onPress={handleUploadImage}
-              >
-                <Text style={styles.visualButtonIcon}>📷</Text>
-                <Text style={styles.visualButtonText}>Upload Image</Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.visualButton, styles.visualButtonAI]}
-                onPress={handleGenerateImage}
-              >
-                <Text style={styles.visualButtonIcon}>✨</Text>
-                <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
-              </TouchableOpacity>
-            </View>
+            {isUploadingImage && (
+              <View style={styles.uploadingContainer}>
+                <Text style={styles.uploadingText}>Uploading image...</Text>
+              </View>
+            )}
+
+            {selectedImage ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={styles.imagePreview}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={handleRemoveImage}
+                >
+                  <Text style={styles.removeImageText}>✕ Remove</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.visualButtons}>
+                <TouchableOpacity
+                  style={styles.visualButton}
+                  onPress={handleUploadImage}
+                  disabled={isUploadingImage}
+                >
+                  <Text style={styles.visualButtonIcon}>📷</Text>
+                  <Text style={styles.visualButtonText}>Upload Image</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.visualButton, styles.visualButtonAI]}
+                  onPress={handleGenerateImage}
+                  disabled={isUploadingImage}
+                >
+                  <Text style={styles.visualButtonIcon}>✨</Text>
+                  <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* LinkedIn Preview */}
@@ -551,6 +643,15 @@ export default function EditPostScreen() {
         visible={showScheduleModal}
         onClose={() => setShowScheduleModal(false)}
         onSchedule={handleSchedule}
+      />
+
+      {/* AI Actions Modal */}
+      <AIActionsModal
+        visible={showAIModal}
+        currentText={content}
+        onClose={() => setShowAIModal(false)}
+        onApply={handleAIApply}
+        onUseHook={handleUseHook}
       />
     </SafeAreaView>
   );
@@ -850,5 +951,40 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666666',
     fontWeight: '500',
+  },
+  uploadingContainer: {
+    backgroundColor: Colors.gray100,
+    borderRadius: Layout.borderRadius.md,
+    padding: Layout.spacing.md,
+    alignItems: 'center',
+    marginBottom: Layout.spacing.sm,
+  },
+  uploadingText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+  },
+  imagePreviewContainer: {
+    position: 'relative',
+    marginBottom: Layout.spacing.sm,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: Layout.borderRadius.md,
+    backgroundColor: Colors.gray100,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: Layout.spacing.sm,
+    right: Layout.spacing.sm,
+    backgroundColor: Colors.error,
+    borderRadius: Layout.borderRadius.sm,
+    paddingHorizontal: Layout.spacing.sm,
+    paddingVertical: Layout.spacing.xs,
+  },
+  removeImageText: {
+    color: Colors.white,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
 });

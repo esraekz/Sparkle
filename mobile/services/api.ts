@@ -16,7 +16,7 @@ const AUTH_TOKEN_KEY = '@sparkle_auth_token';
 // Create axios instance
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // 30 seconds for AI requests
   headers: {
     'Content-Type': 'application/json',
   },
