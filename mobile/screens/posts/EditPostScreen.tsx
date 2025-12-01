@@ -397,7 +397,7 @@ export default function EditPostScreen() {
               </View>
             )}
 
-            {selectedImage ? (
+            {selectedImage && (
               <View style={styles.imagePreviewContainer}>
                 <Image
                   source={{ uri: selectedImage }}
@@ -408,30 +408,33 @@ export default function EditPostScreen() {
                   style={styles.removeImageButton}
                   onPress={handleRemoveImage}
                 >
-                  <Text style={styles.removeImageText}>✕ Remove</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.visualButtons}>
-                <TouchableOpacity
-                  style={styles.visualButton}
-                  onPress={handleUploadImage}
-                  disabled={isUploadingImage}
-                >
-                  <Text style={styles.visualButtonIcon}>📷</Text>
-                  <Text style={styles.visualButtonText}>Upload Image</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.visualButton, styles.visualButtonAI]}
-                  onPress={handleGenerateImage}
-                  disabled={isUploadingImage}
-                >
-                  <Text style={styles.visualButtonIcon}>✨</Text>
-                  <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
+                  <Text style={styles.removeImageText}>✕</Text>
                 </TouchableOpacity>
               </View>
             )}
+
+            {/* Always show action buttons */}
+            <View style={styles.visualButtons}>
+              <TouchableOpacity
+                style={styles.visualButton}
+                onPress={handleUploadImage}
+                disabled={isUploadingImage}
+              >
+                <Text style={styles.visualButtonIcon}>📷</Text>
+                <Text style={styles.visualButtonText}>
+                  {selectedImage ? 'Replace Image' : 'Upload Image'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.visualButton, styles.visualButtonAI]}
+                onPress={handleGenerateImage}
+                disabled={isUploadingImage}
+              >
+                <Text style={styles.visualButtonIcon}>✨</Text>
+                <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* LinkedIn Preview */}
@@ -975,16 +978,20 @@ const styles = StyleSheet.create({
   },
   removeImageButton: {
     position: 'absolute',
-    top: Layout.spacing.sm,
-    right: Layout.spacing.sm,
-    backgroundColor: Colors.error,
-    borderRadius: Layout.borderRadius.sm,
-    paddingHorizontal: Layout.spacing.sm,
-    paddingVertical: Layout.spacing.xs,
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.white,
   },
   removeImageText: {
     color: Colors.white,
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
+    fontSize: 18,
+    fontWeight: Typography.fontWeight.bold,
   },
 });
