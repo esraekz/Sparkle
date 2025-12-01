@@ -48,6 +48,7 @@ export default function CreatePostScreen() {
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
 
   // Create post mutation
   const createPostMutation = useMutation({
@@ -175,25 +176,48 @@ export default function CreatePostScreen() {
 
     setIsSaving(true);
     try {
-      await createPostMutation.mutateAsync({
+      // First create the post
+      const post = await createPostMutation.mutateAsync({
         content: content.trim(),
         hashtags: parseHashtags(hashtags),
         image_url: uploadedImageUrl,
         source_type: 'manual',
       });
 
-      Alert.alert('Success', 'Draft saved successfully!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            setContent('');
-            setHashtags('');
-            setSelectedImageUri(null);
-            setUploadedImageUrl(null);
-            navigation.navigate('PostsList');
+      // If there's a scheduled date, schedule the post
+      if (scheduledDate) {
+        await schedulePostMutation.mutateAsync({
+          postId: post.id,
+          scheduledFor: scheduledDate.toISOString(),
+        });
+
+        Alert.alert('Success', 'Post scheduled successfully!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              setContent('');
+              setHashtags('');
+              setSelectedImageUri(null);
+              setUploadedImageUrl(null);
+              setScheduledDate(null);
+              navigation.navigate('PostsList');
+            },
           },
-        },
-      ]);
+        ]);
+      } else {
+        Alert.alert('Success', 'Draft saved successfully!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              setContent('');
+              setHashtags('');
+              setSelectedImageUri(null);
+              setUploadedImageUrl(null);
+              navigation.navigate('PostsList');
+            },
+          },
+        ]);
+      }
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to save draft');
     } finally {
@@ -246,41 +270,16 @@ export default function CreatePostScreen() {
     }
   };
 
-  const handleSchedule = async (scheduledDate: Date) => {
+  const handleSchedule = (selectedDate: Date) => {
+    // Just set the scheduled date, don't save yet
+    setScheduledDate(selectedDate);
     setShowScheduleModal(false);
-    setIsSaving(true);
-    try {
-      // First save as draft
-      const post = await createPostMutation.mutateAsync({
-        content: content.trim(),
-        hashtags: parseHashtags(hashtags),
-        image_url: uploadedImageUrl,
-        source_type: 'manual',
-      });
 
-      // Then schedule
-      await schedulePostMutation.mutateAsync({
-        postId: post.id,
-        scheduledFor: scheduledDate.toISOString(),
-      });
-
-      Alert.alert('Success', 'Post scheduled successfully!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            setContent('');
-            setHashtags('');
-            setSelectedImageUri(null);
-            setUploadedImageUrl(null);
-            navigation.navigate('PostsList');
-          },
-        },
-      ]);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to schedule post');
-    } finally {
-      setIsSaving(false);
-    }
+    Alert.alert(
+      'Schedule Set',
+      `Post will be scheduled for ${selectedDate.toLocaleDateString()} at ${selectedDate.toLocaleTimeString()}. Click "Save Draft" to save the scheduled post.`,
+      [{ text: 'OK' }]
+    );
   };
 
   const handleDiscard = () => {
@@ -297,6 +296,7 @@ export default function CreatePostScreen() {
             setHashtags('');
             setSelectedImageUri(null);
             setUploadedImageUrl(null);
+            setScheduledDate(null);
             navigation.navigate('PostsList');
           },
         },

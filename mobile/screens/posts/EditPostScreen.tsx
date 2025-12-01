@@ -49,6 +49,7 @@ export default function EditPostScreen() {
   const [showAIModal, setShowAIModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
 
   // Fetch post data
   const { data: post, isLoading } = useQuery({
@@ -198,18 +199,34 @@ export default function EditPostScreen() {
 
     setIsSaving(true);
     try {
+      // First update the post content
       await updatePostMutation.mutateAsync({
         content: content.trim(),
         hashtags: parseHashtags(hashtags),
         image_url: selectedImage || undefined,
       });
 
-      Alert.alert('Success', 'Draft updated successfully!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      // If there's a scheduled date, schedule the post
+      if (scheduledDate) {
+        await schedulePostMutation.mutateAsync(scheduledDate.toISOString());
+
+        Alert.alert('Success', 'Post scheduled successfully!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              setScheduledDate(null);
+              navigation.goBack();
+            },
+          },
+        ]);
+      } else {
+        Alert.alert('Success', 'Draft updated successfully!', [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ]);
+      }
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to update draft');
     } finally {
@@ -217,34 +234,16 @@ export default function EditPostScreen() {
     }
   };
 
-  const handleSchedule = async (scheduledDate: Date) => {
+  const handleSchedule = (selectedDate: Date) => {
+    // Just set the scheduled date, don't save yet
+    setScheduledDate(selectedDate);
     setShowScheduleModal(false);
-    setIsSaving(true);
 
-    try {
-      // First save any content changes
-      if (content !== post?.content || hashtags !== post?.hashtags.join(', ') || selectedImage !== post?.image_url) {
-        await updatePostMutation.mutateAsync({
-          content: content.trim(),
-          hashtags: parseHashtags(hashtags),
-          image_url: selectedImage || undefined,
-        });
-      }
-
-      // Then schedule
-      await schedulePostMutation.mutateAsync(scheduledDate.toISOString());
-
-      Alert.alert('Success', 'Post scheduled successfully!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to schedule post');
-    } finally {
-      setIsSaving(false);
-    }
+    Alert.alert(
+      'Schedule Set',
+      `Post will be scheduled for ${selectedDate.toLocaleDateString()} at ${selectedDate.toLocaleTimeString()}. Click "Save Draft" to save the scheduled post.`,
+      [{ text: 'OK' }]
+    );
   };
 
   const handlePostNow = async () => {
