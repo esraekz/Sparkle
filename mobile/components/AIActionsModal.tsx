@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import Colors from '../constants/Colors';
 import Typography from '../constants/Typography';
 import Layout from '../constants/Layout';
 import Button from './Button';
+import SparkleLoader from './SparkleLoader';
 import { aiService } from '../services/ai.service';
 import type { AIAction, AIAssistResponse } from '../types';
 
@@ -157,12 +157,29 @@ export default function AIActionsModal({
           </View>
 
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-            {!result ? (
+            {aiMutation.isPending ? (
+              // Show full-screen sparkle loader when AI is generating
+              <View style={styles.loadingContainer}>
+                <SparkleLoader
+                  message={
+                    selectedAction === 'continue'
+                      ? 'Crafting your post...'
+                      : selectedAction === 'rephrase'
+                      ? 'Rephrasing content...'
+                      : selectedAction === 'grammar'
+                      ? 'Fixing grammar...'
+                      : selectedAction === 'engagement'
+                      ? 'Boosting engagement...'
+                      : selectedAction === 'shorter'
+                      ? 'Condensing content...'
+                      : 'Crafting your post...'
+                  }
+                />
+              </View>
+            ) : !result ? (
               <>
                 {/* Action Selection */}
-                <Text style={styles.sectionTitle}>
-                  {aiMutation.isPending ? 'Generating with AI...' : 'Choose an AI action:'}
-                </Text>
+                <Text style={styles.sectionTitle}>Choose an AI action:</Text>
 
                 <View style={styles.actionsGrid}>
                   {AI_ACTIONS.map((action) => (
@@ -182,12 +199,6 @@ export default function AIActionsModal({
                         <Text style={styles.actionTitle}>{action.title}</Text>
                         <Text style={styles.actionDescription}>{action.description}</Text>
                       </View>
-
-                      {aiMutation.isPending && selectedAction === action.id && (
-                        <View style={styles.loadingOverlay}>
-                          <ActivityIndicator color={Colors.primary} />
-                        </View>
-                      )}
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -384,16 +395,11 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: 16,
   },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: Layout.borderRadius.lg,
+    minHeight: 400,
   },
   emptyTextNotice: {
     backgroundColor: '#E3F2FD',
