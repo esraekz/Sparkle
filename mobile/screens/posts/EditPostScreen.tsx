@@ -42,7 +42,8 @@ export default function EditPostScreen() {
   const { postId } = route.params;
 
   const [content, setContent] = useState('');
-  const [hashtags, setHashtags] = useState('');
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [newHashtag, setNewHashtag] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -61,7 +62,7 @@ export default function EditPostScreen() {
   React.useEffect(() => {
     if (post) {
       setContent(post.content);
-      setHashtags(post.hashtags.join(', '));
+      setHashtags(post.hashtags);
       setSelectedImage(post.image_url);
     }
   }, [post]);
@@ -103,20 +104,25 @@ export default function EditPostScreen() {
     },
   });
 
-  const parseHashtags = (hashtagString: string): string[] => {
-    return hashtagString
-      .split(',')
-      .map(tag => tag.trim().replace(/^#/, ''))
-      .filter(tag => tag.length > 0);
-  };
-
   const handleSparkleAI = () => {
     setShowAIModal(true);
   };
 
   const handleAIApply = (result: AIAssistResponse) => {
     setContent(result.content);
-    setHashtags(result.hashtags.join(', '));
+    setHashtags(result.hashtags);
+  };
+
+  const handleAddHashtag = () => {
+    const trimmed = newHashtag.trim().replace(/^#/, ''); // Remove leading # if present
+    if (trimmed && !hashtags.includes(trimmed)) {
+      setHashtags([...hashtags, trimmed]);
+      setNewHashtag('');
+    }
+  };
+
+  const handleRemoveHashtag = (tagToRemove: string) => {
+    setHashtags(hashtags.filter(tag => tag !== tagToRemove));
   };
 
   const handleUseHook = (hook: string) => {
@@ -202,7 +208,7 @@ export default function EditPostScreen() {
       // First update the post content
       await updatePostMutation.mutateAsync({
         content: content.trim(),
-        hashtags: parseHashtags(hashtags),
+        hashtags: hashtags,
         image_url: selectedImage || undefined,
       });
 
@@ -255,10 +261,10 @@ export default function EditPostScreen() {
     setIsSaving(true);
     try {
       // First save any content changes
-      if (content !== post?.content || hashtags !== post?.hashtags.join(', ') || selectedImage !== post?.image_url) {
+      if (content !== post?.content || JSON.stringify(hashtags) !== JSON.stringify(post?.hashtags) || selectedImage !== post?.image_url) {
         await updatePostMutation.mutateAsync({
           content: content.trim(),
-          hashtags: parseHashtags(hashtags),
+          hashtags: hashtags,
           image_url: selectedImage || undefined,
         });
       }
@@ -373,17 +379,75 @@ export default function EditPostScreen() {
 
           {/* Hashtags */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Hashtags</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="e.g., Leadership, Innovation, AI (comma-separated)"
-              placeholderTextColor={Colors.gray500}
-              value={hashtags}
-              onChangeText={setHashtags}
-            />
-            <Text style={styles.hint}>
-              Tip: Use 3-5 relevant hashtags for better reach
-            </Text>
+            <View style={styles.hashtagHeader}>
+              <Text style={styles.sectionTitle}>Hashtags</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => {
+                  Alert.prompt(
+                    'Add Hashtag',
+                    'Enter a hashtag (without #)',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Add',
+                        onPress: (text) => {
+                          const trimmed = text?.trim().replace(/^#/, '');
+                          if (trimmed && !hashtags.includes(trimmed)) {
+                            setHashtags([...hashtags, trimmed]);
+                          }
+                        },
+                      },
+                    ],
+                    'plain-text'
+                  );
+                }}
+              >
+                <Text style={styles.addButtonText}>+ Add</Text>
+              </TouchableOpacity>
+            </View>
+
+            {hashtags.length > 0 ? (
+              <View style={styles.hashtagPillsContainer}>
+                {hashtags.map((tag, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.hashtagPill,
+                      index < 2 ? styles.hashtagPillPrimary : styles.hashtagPillSecondary,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.hashtagPillText,
+                        index < 2 ? styles.hashtagPillTextPrimary : styles.hashtagPillTextSecondary,
+                      ]}
+                    >
+                      #{tag}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveHashtag(tag)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Text
+                        style={[
+                          styles.hashtagRemoveIcon,
+                          index < 2
+                            ? styles.hashtagRemoveIconPrimary
+                            : styles.hashtagRemoveIconSecondary,
+                        ]}
+                      >
+                        ×
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.hint}>
+                Tip: Use 3-5 relevant hashtags for better reach
+              </Text>
+            )}
           </View>
 
           {/* Add Visual */}
@@ -478,9 +542,9 @@ export default function EditPostScreen() {
                   )}
 
                   {/* Hashtags */}
-                  {hashtags.trim() && (
+                  {hashtags.length > 0 && (
                     <View style={styles.linkedinHashtags}>
-                      {parseHashtags(hashtags).map((tag, index) => (
+                      {hashtags.map((tag, index) => (
                         <Text key={index} style={styles.linkedinHashtag}>
                           #{tag}
                         </Text>
@@ -994,5 +1058,68 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 18,
     fontWeight: Typography.fontWeight.bold,
+  },
+  hashtagHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.sm,
+  },
+  addButton: {
+    paddingHorizontal: Layout.spacing.md,
+    paddingVertical: Layout.spacing.xs,
+    borderRadius: Layout.borderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderStyle: 'dashed',
+  },
+  addButtonText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  hashtagPillsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Layout.spacing.xs,
+  },
+  hashtagPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Layout.spacing.sm,
+    paddingVertical: Layout.spacing.xs,
+    borderRadius: Layout.borderRadius.md,
+    gap: 6,
+  },
+  hashtagPillPrimary: {
+    backgroundColor: Colors.primary,
+    borderWidth: 1,
+    borderColor: Colors.primaryDark,
+  },
+  hashtagPillSecondary: {
+    backgroundColor: Colors.gray100,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  hashtagPillText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  hashtagPillTextPrimary: {
+    color: Colors.text,
+  },
+  hashtagPillTextSecondary: {
+    color: Colors.textSecondary,
+  },
+  hashtagRemoveIcon: {
+    fontSize: 20,
+    fontWeight: Typography.fontWeight.bold,
+    lineHeight: 20,
+  },
+  hashtagRemoveIconPrimary: {
+    color: Colors.text,
+  },
+  hashtagRemoveIconSecondary: {
+    color: Colors.textSecondary,
   },
 });
