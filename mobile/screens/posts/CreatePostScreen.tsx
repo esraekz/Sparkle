@@ -12,7 +12,7 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// SafeAreaView removed - React Navigation header handles safe area
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -315,7 +315,7 @@ export default function CreatePostScreen() {
   const charCountColor = isOverLimit ? Colors.error : Colors.textSecondary;
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -622,7 +622,7 @@ export default function CreatePostScreen() {
           onUseHook={handleUseHook}
         />
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -732,41 +732,40 @@ const styles = StyleSheet.create({
   hashtagPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Layout.spacing.sm,
-    paddingVertical: Layout.spacing.xs,
-    borderRadius: Layout.borderRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
     gap: 6,
   },
   hashtagPillPrimary: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#FFFBEC',
     borderWidth: 1,
-    borderColor: Colors.primaryDark,
+    borderColor: '#E6C868',
   },
   hashtagPillSecondary: {
-    backgroundColor: Colors.gray100,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: '#E8E8E8',
+    borderWidth: 0,
   },
   hashtagPillText: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.medium,
   },
   hashtagPillTextPrimary: {
-    color: Colors.text,
+    color: '#B8860B',
   },
   hashtagPillTextSecondary: {
-    color: Colors.textSecondary,
+    color: '#666666',
   },
   hashtagRemoveIcon: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: Typography.fontWeight.bold,
-    lineHeight: 20,
+    lineHeight: 16,
   },
   hashtagRemoveIconPrimary: {
-    color: Colors.text,
+    color: '#B8860B',
   },
   hashtagRemoveIconSecondary: {
-    color: Colors.textSecondary,
+    color: '#666666',
   },
   visualButtons: {
     flexDirection: 'row',

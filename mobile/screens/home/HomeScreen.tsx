@@ -131,10 +131,17 @@ export default function HomeScreen() {
       <TouchableOpacity
         style={styles.fab}
         onPress={() => {
-          // Navigate directly to CreatePost within Post tab (no flash)
+          // Navigate to Post tab with full stack: PostsList -> CreatePost
+          // This ensures back button appears on CreatePost screen
           (navigation as any).navigate('Post', {
-            screen: 'CreatePost',
+            screen: 'PostsList',
           });
+          // Small delay to ensure PostsList is mounted before navigating
+          setTimeout(() => {
+            (navigation as any).navigate('Post', {
+              screen: 'CreatePost',
+            });
+          }, 50);
         }}
         activeOpacity={0.8}
       >

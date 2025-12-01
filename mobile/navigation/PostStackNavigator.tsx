@@ -41,7 +41,7 @@ export default function PostStackNavigator() {
         component={CreatePostScreen}
         options={{
           title: 'Create Post',
-          presentation: 'card',
+          headerShown: true,
         }}
       />
       <Stack.Screen
