@@ -120,6 +120,22 @@ export const postService = {
 
     return response.data.data.image_url;
   },
+
+  /**
+   * Generate AI image from post content
+   * POST /posts/generate-ai-image
+   */
+  async generateAIImage(postText: string): Promise<string> {
+    const response = await apiClient.post<ApiResponse<{ image_url: string }>>(
+      '/posts/generate-ai-image',
+      {
+        post_text: postText,
+        source: 'post_content',
+      }
+    );
+
+    return response.data.data.image_url;
+  },
 };
 
 export default postService;

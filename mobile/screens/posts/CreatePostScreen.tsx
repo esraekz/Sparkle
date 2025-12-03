@@ -25,6 +25,7 @@ import Layout from '../../constants/Layout';
 import Button from '../../components/Button';
 import ScheduleModal from '../../components/ScheduleModal';
 import AIActionsModal from '../../components/AIActionsModal';
+import AIImageModal from '../../components/AIImageModal';
 import { postService } from '../../services/post.service';
 import type { MainTabParamList, PostStackParamList, AIAssistResponse } from '../../types';
 
@@ -46,9 +47,11 @@ export default function CreatePostScreen() {
   const [showPreview, setShowPreview] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
+  const [showAIImageModal, setShowAIImageModal] = useState(false);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
 
   // Create post mutation
@@ -167,11 +170,41 @@ export default function CreatePostScreen() {
   };
 
   const handleGenerateImage = () => {
-    Alert.alert(
-      'Generate with AI',
-      'AI image generation coming soon!',
-      [{ text: 'OK' }]
-    );
+    setShowAIImageModal(true);
+  };
+
+  const handleAIImageGenerate = async () => {
+    if (!content.trim() || content.trim().length < 20) {
+      Alert.alert('Error', 'Please write at least 20 characters before generating an image');
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    try {
+      const imageUrl = await postService.generateAIImage(content);
+
+      // Set both URLs for display
+      setUploadedImageUrl(imageUrl);
+      setSelectedImageUri(imageUrl);
+
+      Alert.alert('Success!', 'Image generated successfully!');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to generate image';
+
+      Alert.alert(
+        'Generation Failed',
+        errorMessage,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Retry',
+            onPress: () => handleAIImageGenerate(),
+          },
+        ]
+      );
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   const handleSaveDraft = async () => {
@@ -434,7 +467,7 @@ export default function CreatePostScreen() {
               <TouchableOpacity
                 style={styles.visualButton}
                 onPress={handleUploadImage}
-                disabled={isUploadingImage}
+                disabled={isUploadingImage || isGeneratingImage}
               >
                 <Text style={styles.visualButtonIcon}>📷</Text>
                 <Text style={styles.visualButtonText}>
@@ -445,15 +478,24 @@ export default function CreatePostScreen() {
               <TouchableOpacity
                 style={[styles.visualButton, styles.visualButtonAI]}
                 onPress={handleGenerateImage}
-                disabled={isUploadingImage}
+                disabled={isUploadingImage || isGeneratingImage}
               >
                 <Text style={styles.visualButtonIcon}>✨</Text>
                 <Text style={styles.visualButtonTextAI}>Generate with AI</Text>
               </TouchableOpacity>
             </View>
 
+            {/* Loading state for AI generation */}
+            {isGeneratingImage && (
+              <View style={styles.generatingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.generatingText}>Creating your image...</Text>
+                <Text style={styles.generatingSubtext}>This may take 10-20 seconds</Text>
+              </View>
+            )}
+
             {/* Image preview below buttons */}
-            {selectedImageUri && (
+            {selectedImageUri && !isGeneratingImage && (
               <View style={styles.imagePreviewContainer}>
                 <Image
                   source={{ uri: selectedImageUri }}
@@ -620,6 +662,15 @@ export default function CreatePostScreen() {
           onClose={() => setShowAIModal(false)}
           onApply={handleAIApply}
           onUseHook={handleUseHook}
+        />
+
+        {/* AI Image Generation Modal */}
+        <AIImageModal
+          visible={showAIImageModal}
+          postContent={content}
+          onClose={() => setShowAIImageModal(false)}
+          onGenerate={handleAIImageGenerate}
+          isGenerating={isGeneratingImage}
         />
       </KeyboardAvoidingView>
     </View>
@@ -1002,5 +1053,25 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+  },
+  generatingContainer: {
+    backgroundColor: '#FFF9E6',
+    padding: Layout.spacing.lg,
+    borderRadius: Layout.borderRadius.md,
+    alignItems: 'center',
+    marginTop: Layout.spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  generatingText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text,
+    marginTop: Layout.spacing.sm,
+  },
+  generatingSubtext: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: 4,
   },
 });

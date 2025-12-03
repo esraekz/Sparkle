@@ -10,6 +10,7 @@ from services.post_service import (
     publish_post
 )
 from services.ai.generation_service import get_generation_service
+from services.ai.image_service import get_image_service
 from services.storage_service import get_storage_service
 from models.post import (
     PostCreate,
@@ -19,6 +20,7 @@ from models.post import (
     PostStatus
 )
 from models.ai import AIAssistRequest, AIAssistResponse
+from models.image import ImageGenerateRequest
 from typing import Dict, Any, Optional
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
@@ -373,4 +375,89 @@ async def ai_assist(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"AI service error: {str(e)}"
+        )
+
+
+@router.post("/generate-ai-image", response_model=Dict[str, Any])
+async def generate_ai_image(
+    request: ImageGenerateRequest,
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Generate an image using AI (DALL-E 3) based on post content.
+
+    **Request Body:**
+    - `post_text`: Post content to generate image from
+    - `source`: Generation source (post_content or custom_description)
+
+    **Phase 1**: Only "post_content" source is supported
+    **Phase 2**: Will add "custom_description" for custom prompts
+
+    **Process:**
+    1. Validate post_text (min 20 characters)
+    2. Generate DALL-E 3 image from post content
+    3. Download generated image
+    4. Upload to Supabase Storage (sparkle_pic bucket)
+    5. Return public URL
+
+    **Returns:**
+    ```json
+    {
+        "status": "success",
+        "data": {
+            "image_url": "https://...supabase.co/storage/v1/object/public/sparkle_pic/..."
+        },
+        "message": "AI image generated successfully"
+    }
+    ```
+
+    **Errors:**
+    - 400: Post text empty or too short
+    - 503: DALL-E API unavailable or API key not configured
+    - 500: Image generation or upload failed
+
+    **Example Request:**
+    ```json
+    {
+        "post_text": "Just launched my new AI-powered productivity app...",
+        "source": "post_content"
+    }
+    ```
+    """
+    user_id = current_user.get("id")
+    image_service = get_image_service()
+
+    try:
+        # Only post_content source supported in Phase 1
+        if request.source != "post_content":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only 'post_content' source is supported in this version"
+            )
+
+        # Generate image using AI
+        image_url = await image_service.generate_from_post_content(
+            request.post_text,
+            user_id
+        )
+
+        return {
+            "status": "success",
+            "data": {"image_url": image_url},
+            "message": "AI image generated successfully"
+        }
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        # Configuration errors (missing API key, etc.)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e)
+        )
+    except Exception as e:
+        # Unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"AI image generation error: {str(e)}"
         )

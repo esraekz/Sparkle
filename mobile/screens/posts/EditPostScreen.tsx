@@ -25,6 +25,7 @@ import Button from '../../components/Button';
 import StatusBadge from '../../components/StatusBadge';
 import ScheduleModal from '../../components/ScheduleModal';
 import AIActionsModal from '../../components/AIActionsModal';
+import AIImageModal from '../../components/AIImageModal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { postService } from '../../services/post.service';
 import type { PostStackParamList, AIAssistResponse } from '../../types';
@@ -48,8 +49,10 @@ export default function EditPostScreen() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
+  const [showAIImageModal, setShowAIImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
 
   // Fetch post data
@@ -194,11 +197,35 @@ export default function EditPostScreen() {
   };
 
   const handleGenerateImage = () => {
-    Alert.alert(
-      'Generate with AI',
-      'AI image generation coming soon!',
-      [{ text: 'OK' }]
-    );
+    // Check if user has written enough content
+    if (!content.trim() || content.trim().length < 20) {
+      Alert.alert(
+        'Need More Content',
+        'Please write at least 20 characters of content before generating an image.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    setShowAIImageModal(true);
+  };
+
+  const handleAIImageGenerate = async () => {
+    setIsGeneratingImage(true);
+    try {
+      // Generate image from post content
+      const imageUrl = await postService.generateAIImage(content.trim());
+      setSelectedImage(imageUrl);
+      Alert.alert('Success!', 'AI image generated successfully!');
+    } catch (error: any) {
+      console.error('AI image generation error:', error);
+      Alert.alert(
+        'Generation Failed',
+        error.message || 'Failed to generate image. Please try again.'
+      );
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   const handleSaveDraft = async () => {
@@ -723,6 +750,15 @@ export default function EditPostScreen() {
         onClose={() => setShowAIModal(false)}
         onApply={handleAIApply}
         onUseHook={handleUseHook}
+      />
+
+      {/* AI Image Modal */}
+      <AIImageModal
+        visible={showAIImageModal}
+        postContent={content}
+        onClose={() => setShowAIImageModal(false)}
+        onGenerate={handleAIImageGenerate}
+        isGenerating={isGeneratingImage}
       />
     </SafeAreaView>
   );
