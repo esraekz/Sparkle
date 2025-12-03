@@ -64,6 +64,10 @@ export default function EditPostScreen() {
       setContent(post.content);
       setHashtags(post.hashtags);
       setSelectedImage(post.image_url);
+      // Load scheduled date if post is scheduled
+      if (post.scheduled_for) {
+        setScheduledDate(new Date(post.scheduled_for));
+      }
     }
   }, [post]);
 
@@ -635,7 +639,7 @@ export default function EditPostScreen() {
               <Text style={styles.iconButtonText}>🗑️</Text>
             </TouchableOpacity>
 
-            {post.status === 'draft' && (
+            {(post.status === 'draft' || post.status === 'scheduled') && (
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={() => setShowScheduleModal(true)}
