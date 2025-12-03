@@ -387,15 +387,16 @@ async def generate_ai_image(
     Generate an image using AI (DALL-E 3) based on post content.
 
     **Request Body:**
-    - `post_text`: Post content to generate image from
+    - `post_text`: Post content to generate image from (required for post_content source)
     - `source`: Generation source (post_content or custom_description)
+    - `custom_prompt`: Custom image description (required for custom_description source)
 
-    **Phase 1**: Only "post_content" source is supported
-    **Phase 2**: Will add "custom_description" for custom prompts
+    **Phase 1**: "post_content" source - generate from post text
+    **Phase 2**: "custom_description" source - generate from custom prompt
 
     **Process:**
-    1. Validate post_text (min 20 characters)
-    2. Generate DALL-E 3 image from post content
+    1. Validate input based on source
+    2. Generate DALL-E 3 image
     3. Download generated image
     4. Upload to Supabase Storage (sparkle_pic bucket)
     5. Return public URL
@@ -412,15 +413,22 @@ async def generate_ai_image(
     ```
 
     **Errors:**
-    - 400: Post text empty or too short
+    - 400: Invalid input (empty text, too short/long, missing fields)
     - 503: DALL-E API unavailable or API key not configured
     - 500: Image generation or upload failed
 
-    **Example Request:**
+    **Example Requests:**
     ```json
+    // From post content
     {
         "post_text": "Just launched my new AI-powered productivity app...",
         "source": "post_content"
+    }
+
+    // From custom prompt
+    {
+        "custom_prompt": "A futuristic robot shaking hands with a human in modern office",
+        "source": "custom_description"
     }
     ```
     """
@@ -428,18 +436,29 @@ async def generate_ai_image(
     image_service = get_image_service()
 
     try:
-        # Only post_content source supported in Phase 1
-        if request.source != "post_content":
+        # Route based on source type
+        if request.source == "post_content":
+            # Generate from post content
+            image_url = await image_service.generate_from_post_content(
+                request.post_text,
+                user_id
+            )
+        elif request.source == "custom_description":
+            # Generate from custom prompt
+            if not request.custom_prompt:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="custom_prompt is required when source is 'custom_description'"
+                )
+            image_url = await image_service.generate_from_custom_prompt(
+                request.custom_prompt,
+                user_id
+            )
+        else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only 'post_content' source is supported in this version"
+                detail=f"Invalid source: {request.source}. Must be 'post_content' or 'custom_description'"
             )
-
-        # Generate image using AI
-        image_url = await image_service.generate_from_post_content(
-            request.post_text,
-            user_id
-        )
 
         return {
             "status": "success",

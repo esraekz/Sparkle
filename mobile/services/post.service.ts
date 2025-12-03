@@ -122,16 +122,26 @@ export const postService = {
   },
 
   /**
-   * Generate AI image from post content
+   * Generate AI image from post content or custom prompt
    * POST /posts/generate-ai-image
    */
-  async generateAIImage(postText: string): Promise<string> {
+  async generateAIImage(postText: string, customPrompt?: string): Promise<string> {
+    const requestBody: any = {};
+
+    if (customPrompt) {
+      // Custom description mode
+      requestBody.source = 'custom_description';
+      requestBody.custom_prompt = customPrompt;
+      requestBody.post_text = ''; // Not used for custom
+    } else {
+      // Post content mode
+      requestBody.source = 'post_content';
+      requestBody.post_text = postText;
+    }
+
     const response = await apiClient.post<ApiResponse<{ image_url: string }>>(
       '/posts/generate-ai-image',
-      {
-        post_text: postText,
-        source: 'post_content',
-      }
+      requestBody
     );
 
     return response.data.data.image_url;

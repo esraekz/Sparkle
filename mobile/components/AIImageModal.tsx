@@ -6,6 +6,7 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import Colors from '../constants/Colors';
 import Typography from '../constants/Typography';
@@ -16,7 +17,7 @@ interface AIImageModalProps {
   visible: boolean;
   postContent: string;
   onClose: () => void;
-  onGenerate: () => Promise<void>;
+  onGenerate: (customPrompt?: string) => Promise<void>;
   isGenerating?: boolean;
 }
 
@@ -43,7 +44,7 @@ const SOURCE_OPTIONS: SourceOption[] = [
     icon: '🎨',
     title: 'Custom description',
     description: 'Describe exactly what you want to see',
-    enabled: false, // Phase 2
+    enabled: true, // Phase 2: Now enabled
   },
 ];
 
@@ -55,22 +56,29 @@ export default function AIImageModal({
   isGenerating = false,
 }: AIImageModalProps) {
   const [selectedSource, setSelectedSource] = useState<ImageSource>('post_content');
+  const [customPrompt, setCustomPrompt] = useState('');
 
   const handleContinue = async () => {
-    // For Phase 1, only post_content is supported
     if (selectedSource === 'post_content') {
       await onGenerate();
-      onClose();
+    } else if (selectedSource === 'custom') {
+      await onGenerate(customPrompt.trim());
     }
+    onClose();
   };
 
   const handleClose = () => {
     setSelectedSource('post_content'); // Reset to default
+    setCustomPrompt(''); // Reset custom prompt
     onClose();
   };
 
-  // Check if user has written enough content
+  // Validation logic
   const hasEnoughContent = postContent.trim().length >= 20;
+  const hasValidCustomPrompt =
+    customPrompt.trim().length >= 10 && customPrompt.trim().length <= 500;
+  const isValid =
+    selectedSource === 'post_content' ? hasEnoughContent : hasValidCustomPrompt;
 
   return (
     <Modal
@@ -145,12 +153,43 @@ export default function AIImageModal({
               </TouchableOpacity>
             ))}
 
+            {/* Custom Prompt Input - shown when custom option selected */}
+            {selectedSource === 'custom' && (
+              <View style={styles.customPromptContainer}>
+                <Text style={styles.customPromptLabel}>Describe your image</Text>
+                <TextInput
+                  style={styles.customPromptInput}
+                  placeholder="e.g., A futuristic robot shaking hands with a human in modern office"
+                  placeholderTextColor={Colors.gray500}
+                  multiline
+                  maxLength={500}
+                  value={customPrompt}
+                  onChangeText={setCustomPrompt}
+                  textAlignVertical="top"
+                  autoFocus
+                />
+                <Text style={styles.characterCount}>
+                  {customPrompt.length}/500 characters
+                </Text>
+              </View>
+            )}
+
             {/* Warning if content too short */}
-            {!hasEnoughContent && selectedSource === 'post_content' && (
+            {selectedSource === 'post_content' && !hasEnoughContent && (
               <View style={styles.warningContainer}>
                 <Text style={styles.warningIcon}>⚠️</Text>
                 <Text style={styles.warningText}>
                   Write at least 20 characters of content to generate an image
+                </Text>
+              </View>
+            )}
+
+            {/* Warning if custom prompt too short */}
+            {selectedSource === 'custom' && customPrompt.length > 0 && customPrompt.length < 10 && (
+              <View style={styles.warningContainer}>
+                <Text style={styles.warningIcon}>⚠️</Text>
+                <Text style={styles.warningText}>
+                  Description must be at least 10 characters
                 </Text>
               </View>
             )}
@@ -169,7 +208,7 @@ export default function AIImageModal({
               title={isGenerating ? "Generating..." : "Continue"}
               variant="primary"
               onPress={handleContinue}
-              disabled={!hasEnoughContent || selectedSource !== 'post_content' || isGenerating}
+              disabled={!isValid || isGenerating}
               loading={isGenerating}
               style={styles.footerButton}
             />
@@ -331,5 +370,36 @@ const styles = StyleSheet.create({
   },
   footerButton: {
     flex: 1,
+  },
+  customPromptContainer: {
+    marginTop: Layout.spacing.md,
+    backgroundColor: Colors.white,
+    borderRadius: Layout.borderRadius.md,
+    padding: Layout.spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  customPromptLabel: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text,
+    marginBottom: Layout.spacing.sm,
+  },
+  customPromptInput: {
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Layout.borderRadius.md,
+    padding: Layout.spacing.md,
+    fontSize: Typography.fontSize.md,
+    color: Colors.text,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    marginBottom: Layout.spacing.xs,
+  },
+  characterCount: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    textAlign: 'right',
   },
 });

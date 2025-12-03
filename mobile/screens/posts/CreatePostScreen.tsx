@@ -173,15 +173,16 @@ export default function CreatePostScreen() {
     setShowAIImageModal(true);
   };
 
-  const handleAIImageGenerate = async () => {
-    if (!content.trim() || content.trim().length < 20) {
+  const handleAIImageGenerate = async (customPrompt?: string) => {
+    // Validation is handled by the modal, but double-check here
+    if (!customPrompt && (!content.trim() || content.trim().length < 20)) {
       Alert.alert('Error', 'Please write at least 20 characters before generating an image');
       return;
     }
 
     setIsGeneratingImage(true);
     try {
-      const imageUrl = await postService.generateAIImage(content);
+      const imageUrl = await postService.generateAIImage(content, customPrompt);
 
       // Set both URLs for display
       setUploadedImageUrl(imageUrl);
@@ -198,7 +199,7 @@ export default function CreatePostScreen() {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Retry',
-            onPress: () => handleAIImageGenerate(),
+            onPress: () => handleAIImageGenerate(customPrompt),
           },
         ]
       );

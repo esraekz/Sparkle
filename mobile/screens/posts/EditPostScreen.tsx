@@ -210,18 +210,27 @@ export default function EditPostScreen() {
     setShowAIImageModal(true);
   };
 
-  const handleAIImageGenerate = async () => {
+  const handleAIImageGenerate = async (customPrompt?: string) => {
     setIsGeneratingImage(true);
     try {
-      // Generate image from post content
-      const imageUrl = await postService.generateAIImage(content.trim());
+      // Generate image from post content or custom prompt
+      const imageUrl = await postService.generateAIImage(content.trim(), customPrompt);
       setSelectedImage(imageUrl);
       Alert.alert('Success!', 'AI image generated successfully!');
     } catch (error: any) {
       console.error('AI image generation error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to generate image';
+
       Alert.alert(
         'Generation Failed',
-        error.message || 'Failed to generate image. Please try again.'
+        errorMessage,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Retry',
+            onPress: () => handleAIImageGenerate(customPrompt),
+          },
+        ]
       );
     } finally {
       setIsGeneratingImage(false);
