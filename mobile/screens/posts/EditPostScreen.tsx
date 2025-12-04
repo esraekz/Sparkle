@@ -632,11 +632,11 @@ export default function EditPostScreen() {
             </Text>
           </View>
 
-          {post.scheduled_for && (
+          {(scheduledDate || post.scheduled_for) && (
             <View style={styles.infoSection}>
               <Text style={styles.infoLabel}>Scheduled for</Text>
               <Text style={styles.infoValue}>
-                {new Date(post.scheduled_for).toLocaleString('en-US', {
+                {new Date(scheduledDate || post.scheduled_for).toLocaleString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',

@@ -520,6 +520,31 @@ export default function CreatePostScreen() {
             )}
           </View>
 
+          {/* Scheduled Date Display */}
+          {scheduledDate && (
+            <View style={styles.scheduledSection}>
+              <View style={styles.scheduledInfo}>
+                <Text style={styles.scheduledLabel}>⏰ Scheduled for</Text>
+                <Text style={styles.scheduledDate}>
+                  {scheduledDate.toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })} at {scheduledDate.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  })}
+                </Text>
+                <TouchableOpacity
+                  style={styles.rescheduleButton}
+                  onPress={() => setShowScheduleModal(true)}
+                >
+                  <Text style={styles.rescheduleButtonText}>Change Schedule</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           {/* LinkedIn Preview */}
           <View style={styles.previewSection}>
             <TouchableOpacity
@@ -892,6 +917,43 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 18,
     fontWeight: Typography.fontWeight.bold,
+  },
+  scheduledSection: {
+    backgroundColor: '#FFF9E6',
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    borderRadius: Layout.borderRadius.md,
+    padding: Layout.spacing.md,
+    marginBottom: Layout.spacing.lg,
+  },
+  scheduledInfo: {
+    alignItems: 'center',
+  },
+  scheduledLabel: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.text,
+    marginBottom: Layout.spacing.xs,
+  },
+  scheduledDate: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.primary,
+    marginBottom: Layout.spacing.md,
+    textAlign: 'center',
+  },
+  rescheduleButton: {
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: Layout.borderRadius.sm,
+    paddingVertical: Layout.spacing.xs,
+    paddingHorizontal: Layout.spacing.md,
+  },
+  rescheduleButtonText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.medium,
   },
   previewSection: {
     backgroundColor: Colors.white,
